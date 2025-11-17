@@ -1,0 +1,14 @@
+{
+  "name": "pico-dash",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --config ./src/client/vite.config.ts",
+    "build": "tsc && vite build --config client/vite.config.js"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3",
+    "vite": "^7.2.2"
+  }
+}
