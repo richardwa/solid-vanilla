@@ -20,7 +20,7 @@ export const grid = (gridTemplateColumns: string) =>
 
 export const fragment = (...children: Array<RNode | string>) =>
   h("div")
-    .css("display", "content")
+    .css("display", "contents")
     .inner(...children);
 
 export const hbox = (...children: Array<RNode | string>) =>

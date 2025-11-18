@@ -53,7 +53,7 @@
     return this;
   }
 
-  on(event: string, fn: () => void) {
+  on(event: string, fn: (event: any) => void) {
     const element = this.el;
     if (event == null) {
       // true keeps children, false removes them
@@ -70,6 +70,11 @@
       const clear = s.on(() => fn(this), now);
       this.watchers.push(clear);
     });
+    return this;
+  }
+
+  do(fn: (n: RNode) => void) {
+    fn(this);
     return this;
   }
 
@@ -103,6 +108,7 @@ export const render = (
 
 export class Signal<T> {
   val: T;
+  old?: T;
   subscribers: Set<() => void>;
   constructor(initial: T) {
     this.val = initial;
@@ -110,12 +116,17 @@ export class Signal<T> {
   }
   set(newVal: T) {
     if (newVal === this.val) return;
+    this.old = this.val;
     this.val = newVal;
     this.subscribers.forEach((fn) => fn());
   }
 
   get() {
     return this.val;
+  }
+
+  prev() {
+    return this.old;
   }
 
   on(fn: () => void, now = false) {
