@@ -1,24 +1,20 @@
-import express, {Request, Response} from 'express';
-import path from 'path';
-import {routes} from './api-routes';
-import { apiPath } from '../common/interface';
+import express, { Request, Response } from "express";
+import path from "path";
+import { configureRoutes } from "./routes";
+import { apiPath } from "../common/interface";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// @ts-ignore
-app.use(express.json());
-
-// Serve API
-app.use(apiPath, routes);
+configureRoutes(app);
 
 // Serve frontend from built Vite dist
-const distPath = path.resolve(__dirname, '../../dist');
+const distPath = path.resolve(__dirname, "../../dist");
 app.use(express.static(distPath));
 
 // SPA fallback
-app.use((req:Request, res:Response) => {
-  res.sendFile(path.join(distPath, 'index.html'));
+app.use((req: Request, res: Response) => {
+  res.sendFile(path.join(distPath, "index.html"));
 });
 
 app.listen(PORT, () => {

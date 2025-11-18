@@ -4,13 +4,13 @@ import { GitLog } from "../../common/interface";
 
 const execAsync = promisify(exec);
 
-export const getGitLog = async (branchName:string, lines?: number) => {
+export const getGitLog = async (branchName: string, lines?: number) => {
   if (!branchName) {
     return [];
   }
 
   const delim = "|";
-  const linesArg = lines ? ` -${lines}` : '';
+  const linesArg = lines ? ` -${lines}` : "";
   const { stdout } = await execAsync(
     `git log${linesArg} ${branchName} --pretty=format:"%H${delim}%aI${delim}%al${delim}%f"`,
   );
