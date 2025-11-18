@@ -22,7 +22,7 @@ export const NavLink = (href: string, ...children: Array<RNode | string>) =>
 export const ClickLink = (...children: Array<RNode | string>) =>
   h("a")
     .css("cursor", "pointer")
-    .css('color', 'blue')
+    .css("color", "blue")
     .inner(...children);
 
 export const TextInput = (val: Signal<string>) =>

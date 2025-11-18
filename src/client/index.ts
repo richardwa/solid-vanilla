@@ -2,6 +2,7 @@ import { hbox, vbox, wrap, fragment, grid } from "./lib/base-components";
 import { Button, ClickLink, NumberInput, TextInput } from "./components";
 import { Signal, render, RNode } from "./lib/react-like";
 import { fetchJson } from "../common/interface";
+import { formatDate } from "../common/util";
 
 const CounterDisplay = (counter: Signal<number>) => {
   return wrap()
@@ -42,7 +43,7 @@ const GitDemo = () => {
         ),
       vbox(
         title("Logs: "),
-        grid("repeat(3,max-content)")
+        grid("repeat(4,max-content)")
           .css("column-gap", "1rem")
           .watch([maxLines, selectedBranch], async (node) => {
             const branch = selectedBranch.get();
@@ -51,8 +52,9 @@ const GitDemo = () => {
               node.inner(
                 ...logs.flatMap((log) => [
                   wrap(log.commitHash.slice(0, 10)),
-                  wrap(log.commitDate),
+                  wrap(formatDate(log.commitDate)),
                   wrap(log.commitAuthor),
+                  wrap(log.commitMessage),
                 ]),
               );
             }
