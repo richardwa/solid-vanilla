@@ -1,4 +1,4 @@
-import { hbox, vbox, wrap, fragment, grid } from "./lib/base-components";
+import { hbox, vbox, div, fragment, grid } from "./lib/base-components";
 import { Button, ClickLink, NumberInput, TextInput } from "./components";
 import { signal, render, RNode } from "./lib";
 import { fetchJson, GitLog } from "../common/interface";
@@ -7,14 +7,13 @@ import { formatDate } from "../common/util";
 const GitDemo = () => {
   const maxLines = signal(5);
   const selectedBranch = signal<string>();
-  selectedBranch.set(undefined);
 
-  const title = (s: string) => wrap(s).css("font-weight", "bold");
+  const title = (s: string) => div(s).css("font-weight", "bold");
   return vbox()
     .css("padding", "1rem")
     .css("gap", "1rem")
     .inner(
-      wrap("log limit: ", NumberInput(maxLines)),
+      div("log limit: ", NumberInput(maxLines)),
       hbox()
         .css("gap", "1rem")
         .inner(
@@ -46,10 +45,10 @@ const GitDemo = () => {
               const logs = await fetchJson("gitLogs", branch, maxLines.get());
               const logRow = (log: GitLog) =>
                 fragment(
-                  wrap(log.commitHash.slice(0, 10)),
-                  wrap(formatDate(log.commitDate)),
-                  wrap(log.commitAuthor),
-                  wrap(log.commitMessage),
+                  div(log.commitHash.slice(0, 10)),
+                  div(formatDate(log.commitDate)),
+                  div(log.commitAuthor),
+                  div(log.commitMessage),
                 );
               node.inner(
                 ...logs.map((log) =>

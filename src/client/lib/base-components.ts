@@ -10,7 +10,7 @@ export const button = (...children: Array<RNode | string>) =>
     .attr("type", "button")
     .inner(...children);
 
-export const wrap = (...children: Array<RNode | string>) =>
+export const div = (...children: Array<RNode | string>) =>
   h("div").inner(...children);
 
 export const grid = (gridTemplateColumns: string) =>
