@@ -9,11 +9,15 @@ const serverImpl: ServerApi = {
   gitLogs: getGitLog
 }
 
-
-
-routes.get('/hello', (req:Request, res:Response) => {
-  res.json({ message: 'Hello from Express inside Vite!' });
-});
-
+Object.entries(serverImpl).forEach(([key, fn]) => {
+  console.log('registering', key, fn);
+  routes.post(`/${key}`, async (req: Request, res: Response) => {
+    // @ts-ignore
+    const reqParams = req.body ?? [];
+    // @ts-ignore
+    const result =  await fn(...reqParams);
+    res.json(result);
+  });
+})
 
 export { routes };

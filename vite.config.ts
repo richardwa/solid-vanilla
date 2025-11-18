@@ -8,6 +8,8 @@ const expressPlugin = () => ({
   name: 'vite-plugin-express',
   configureServer(server: ViteDevServer) {
     const app = express();
+    // @ts-ignore
+    app.use(express.json());
 
     // Example middleware
     const logger = (req: Request, res: Response, next: NextFunction) => {

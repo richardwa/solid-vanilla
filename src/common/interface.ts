@@ -10,11 +10,11 @@ export type GitLog = {
 
 export type ServerApi = {
     gitBranches: () => Promise<string[]>,
-    gitLogs: (branch: string, lines: number) => Promise<GitLog[]>
+    gitLogs: (branch: string, lines?: number) => Promise<GitLog[]>
 }
 
 export const fetchJson = <T extends keyof ServerApi>(key: T, ...params: Parameters<ServerApi[T]>) =>
-    fetch(`${key}`,
+    fetch(`${apiPath}/${key}`,
         {
             method: 'post',
             headers: { "Content-Type": "application/json" },

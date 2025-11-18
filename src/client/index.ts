@@ -15,6 +15,9 @@ const CounterDemo = () => {
   const counter = new Signal(0);
   const hello = wrap();
   fetch('/api/hello').then(res => res.json()).then(json => hello.inner(JSON.stringify(json)))
+  fetchJson('gitLogs','main',2).then(logs => {
+    hello.inner(JSON.stringify(logs));
+  })
 
 
   const styledButton = () => Button().css("width", "5rem");
