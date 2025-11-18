@@ -12,6 +12,9 @@ const CounterDisplay = (counter:Signal<number>) => {
 
 const CounterDemo = () => {
   const counter = new Signal(0);
+  const hello = wrap();
+  fetch('/api/hello').then(res => res.json()).then(json => hello.inner(JSON.stringify(json)))
+
 
   const styledButton = () => Button().css("width", "5rem");
 
@@ -26,6 +29,7 @@ const CounterDemo = () => {
       styledButton()
         .inner("-")
         .on("click", () => counter.set(counter.get() - 1)),
+        hello
     );
 };
 
