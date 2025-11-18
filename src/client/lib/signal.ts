@@ -28,3 +28,9 @@ export class Signal<T> {
     return () => this.subscribers.delete(fn);
   }
 }
+
+export function signal<T>(): Signal<T | undefined>;
+export function signal<T>(v: T): Signal<T>;
+export function signal<T>(v?: T) {
+  return new Signal(v);
+}

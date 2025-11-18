@@ -72,11 +72,20 @@ export class RNode {
     return this;
   }
 
-  watch(signals: Signal<unknown>[], fn: (n: RNode) => void, now = true) {
-    signals.forEach((s) => {
-      const clear = s.on(() => fn(this), now);
+  watch(
+    signals: Signal<unknown> | Signal<unknown>[],
+    fn: (n: RNode) => void,
+    now = true,
+  ) {
+    const register = (signal: Signal<unknown>) => {
+      const clear = signal.on(() => fn(this), now);
       this.unmountListeners.push(clear);
-    });
+    };
+    if (Array.isArray(signals)) {
+      signals.forEach(register);
+    } else {
+      register(signals);
+    }
     return this;
   }
 

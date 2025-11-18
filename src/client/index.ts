@@ -1,12 +1,13 @@
 import { hbox, vbox, wrap, fragment, grid } from "./lib/base-components";
 import { Button, ClickLink, NumberInput, TextInput } from "./components";
-import { Signal, render, RNode } from "./lib";
+import { signal, render, RNode } from "./lib";
 import { fetchJson, GitLog } from "../common/interface";
 import { formatDate } from "../common/util";
 
 const GitDemo = () => {
-  const maxLines = new Signal(5);
-  const selectedBranch = new Signal<string | undefined>(undefined);
+  const maxLines = signal(5);
+  const selectedBranch = signal<string>();
+  selectedBranch.set(undefined);
 
   const title = (s: string) => wrap(s).css("font-weight", "bold");
   return vbox()
@@ -25,7 +26,7 @@ const GitDemo = () => {
               ...branches.map((branch) =>
                 ClickLink(branch)
                   .on("click", () => selectedBranch.set(branch))
-                  .watch([selectedBranch], (node) =>
+                  .watch(selectedBranch, (node) =>
                     node.css(
                       "font-weight",
                       selectedBranch.get() === branch ? "bold" : "normal",
