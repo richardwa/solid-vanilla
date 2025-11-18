@@ -1,4 +1,11 @@
-﻿export class RNode {
+﻿const debug = (...msg: any[]) => {
+  // @ts-ignore
+  if (import.meta.env.DEV) {
+    console.debug("[react-like.ts]", ...msg);
+  }
+};
+
+export class RNode {
   el: HTMLElement;
   childrenSet: Set<RNode | string>;
   unmountListeners: Array<() => void>;
@@ -12,7 +19,7 @@
 
   unmount() {
     this.el.remove();
-    console.log("unmounted");
+    debug("unmounted");
     this.childrenSet.forEach((r) => {
       if (typeof r !== "string") r.unmount();
     });
@@ -73,7 +80,7 @@
     return this;
   }
 
-  do(fn: (n: RNode) => void) {
+  do(fn: (node: RNode) => void) {
     fn(this);
     return this;
   }
@@ -84,12 +91,11 @@
       this.memoMap = localMemoMap;
     }
     const val = localMemoMap.get(key);
-    if (
-      typeof val === "string" ||
-      (val instanceof RNode && val.el.isConnected)
-    ) {
+    if (val) {
+      debug("cache hit", key);
       return val;
     }
+    debug("cache miss", key);
     const newVal = fn();
     if (newVal instanceof RNode) {
       newVal.onUnmount(() => {
