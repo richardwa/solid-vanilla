@@ -1,15 +1,8 @@
 import { hbox, vbox, wrap, fragment, grid } from "./lib/base-components";
 import { Button, ClickLink, NumberInput, TextInput } from "./components";
-import { Signal, render, RNode } from "./lib/react-like";
+import { Signal, render, RNode } from "./lib";
 import { fetchJson, GitLog } from "../common/interface";
 import { formatDate } from "../common/util";
-
-const CounterDisplay = (counter: Signal<number>) => {
-  return wrap()
-    .css("width", "2rem")
-    .css("text-align", "center")
-    .watch([counter], (el) => el.inner(counter.get().toString()));
-};
 
 const GitDemo = () => {
   const maxLines = new Signal(5);
@@ -17,6 +10,7 @@ const GitDemo = () => {
 
   const title = (s: string) => wrap(s).css("font-weight", "bold");
   return vbox()
+    .css("padding", "1rem")
     .css("gap", "1rem")
     .inner(
       wrap("log limit: ", NumberInput(maxLines)),

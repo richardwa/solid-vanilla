@@ -1,4 +1,4 @@
-import { h, type RNode } from "./react-like";
+import { h, type RNode } from "./rnode";
 
 export const href = (href: string, ...children: Array<RNode | string>) =>
   h("a")
