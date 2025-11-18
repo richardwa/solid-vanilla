@@ -1,7 +1,7 @@
 import path from 'path';
 import { defineConfig, ViteDevServer } from 'vite';
 import express, { Request, Response, NextFunction } from 'express';
-import { apiRoutes } from './src/server/api-routes';
+import { routes } from './src/server/api-routes';
 import { apiPath } from './src/common/interface'
 
 const expressPlugin = () => ({
@@ -16,7 +16,7 @@ const expressPlugin = () => ({
     };
 
     app.use(logger);
-    app.use(apiPath, apiRoutes);
+    app.use(apiPath, routes);
 
     // Attach Express app to Vite dev server middleware stack
     server.middlewares.use(app);
@@ -32,7 +32,8 @@ export default defineConfig({
     strictPort: true
   },
   build:{
-    outDir: path.resolve(__dirname, 'dist')
+    outDir: path.resolve(__dirname, 'dist'),
+    emptyOutDir: true,
   },
   plugins: [expressPlugin()]
 });

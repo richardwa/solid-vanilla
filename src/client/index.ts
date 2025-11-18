@@ -1,6 +1,7 @@
 import {hbox,wrap} from './lib/base-components';
-import {Button} from './util';
+import {Button} from './components';
 import { Signal,render } from './lib/react-like';
+import {fetchJson} from '../common/interface';
 
 
 const CounterDisplay = (counter:Signal<number>) => {

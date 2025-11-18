@@ -27,8 +27,8 @@ export const getGitLog = async (branchName:string, lines = 1) => {
   });
 };
 
-export const getLocalBranches = async () => {
-  const lines = new Set();
+export const getBranches = async () => {
+  const lines = new Set<string>();
   const { stdout } = await execAsync(
     'git for-each-ref --format="%(refname:short)" refs/heads/',
   );

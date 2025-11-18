@@ -1,4 +1,5 @@
-﻿export class RNode {
+﻿
+export class RNode {
   el: HTMLElement;
   childrenSet: Set<RNode|string>;
   watchers: Array<() => void>;

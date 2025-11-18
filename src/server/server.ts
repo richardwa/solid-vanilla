@@ -1,13 +1,16 @@
 import express, {Request, Response} from 'express';
 import path from 'path';
-import {apiRoutes} from './api-routes';
+import {routes} from './api-routes';
 import { apiPath } from '../common/interface';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// @ts-ignore
+app.use(express.json());
+
 // Serve API
-app.use(apiPath, apiRoutes);
+app.use(apiPath, routes);
 
 // Serve frontend from built Vite dist
 const distPath = path.resolve(__dirname, '../../dist');
