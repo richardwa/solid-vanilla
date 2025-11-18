@@ -1,26 +1,26 @@
 ﻿export class RNode {
   el: HTMLElement;
   childrenSet: Set<RNode | string>;
-  watchers: Array<() => void>;
-  unmountCb?: () => void;
+  unmountListeners: Array<() => void>;
+  memoMap?: Map<string | number, RNode | string>;
 
   constructor(tag: string) {
     this.el = document.createElement(tag);
-    this.childrenSet = new Set<RNode | string>();
-    this.watchers = [];
+    this.childrenSet = new Set();
+    this.unmountListeners = [];
   }
 
   unmount() {
     this.el.remove();
-    if (this.unmountCb) this.unmountCb();
+    console.log("unmounted");
     this.childrenSet.forEach((r) => {
       if (typeof r !== "string") r.unmount();
     });
-    this.watchers.forEach((unwatch) => unwatch());
+    this.unmountListeners.forEach((fn) => fn());
   }
 
   onUnmount(fn: () => void) {
-    this.unmountCb = fn;
+    this.unmountListeners.push(fn);
     return this;
   }
 
@@ -38,8 +38,8 @@
     return this;
   }
 
-  cn(name: string, on = true) {
-    if (on) {
+  cn(name: string, add = true) {
+    if (add) {
       this.el.classList.add(name);
     } else {
       this.el.classList.remove(name);
@@ -68,7 +68,7 @@
   watch(signals: Signal<unknown>[], fn: (n: RNode) => void, now = true) {
     signals.forEach((s) => {
       const clear = s.on(() => fn(this), now);
-      this.watchers.push(clear);
+      this.unmountListeners.push(clear);
     });
     return this;
   }
@@ -76,6 +76,28 @@
   do(fn: (n: RNode) => void) {
     fn(this);
     return this;
+  }
+
+  memo(key: string | number, fn: () => RNode | string) {
+    const localMemoMap = this.memoMap ?? new Map();
+    if (this.memoMap === undefined) {
+      this.memoMap = localMemoMap;
+    }
+    const val = localMemoMap.get(key);
+    if (
+      typeof val === "string" ||
+      (val instanceof RNode && val.el.isConnected)
+    ) {
+      return val;
+    }
+    const newVal = fn();
+    if (newVal instanceof RNode) {
+      newVal.onUnmount(() => {
+        localMemoMap.delete(key);
+      });
+    }
+    localMemoMap.set(key, newVal);
+    return newVal;
   }
 
   inner(...newChildren: Array<RNode | string>) {

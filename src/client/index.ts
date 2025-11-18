@@ -1,7 +1,7 @@
 import { hbox, vbox, wrap, fragment, grid } from "./lib/base-components";
 import { Button, ClickLink, NumberInput, TextInput } from "./components";
 import { Signal, render, RNode } from "./lib/react-like";
-import { fetchJson } from "../common/interface";
+import { fetchJson, GitLog } from "../common/interface";
 import { formatDate } from "../common/util";
 
 const CounterDisplay = (counter: Signal<number>) => {
@@ -49,13 +49,20 @@ const GitDemo = () => {
             const branch = selectedBranch.get();
             if (branch) {
               const logs = await fetchJson("gitLogs", branch, maxLines.get());
-              node.inner(
-                ...logs.flatMap((log) => [
+              const logRow = (log: GitLog) =>
+                fragment(
                   wrap(log.commitHash.slice(0, 10)),
                   wrap(formatDate(log.commitDate)),
                   wrap(log.commitAuthor),
                   wrap(log.commitMessage),
-                ]),
+                );
+              node.inner(
+                ...logs.map((log) =>
+                  node.memo(
+                    [selectedBranch.get(), log.commitHash].join(" "),
+                    () => logRow(log),
+                  ),
+                ),
               );
             }
           }),
