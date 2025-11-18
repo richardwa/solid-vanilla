@@ -10,7 +10,6 @@ const serverImpl: ServerApi = {
 }
 
 Object.entries(serverImpl).forEach(([key, fn]) => {
-  console.log('registering', key, fn);
   routes.post(`/${key}`, async (req: Request, res: Response) => {
     // @ts-ignore
     const reqParams = req.body ?? [];

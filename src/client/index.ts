@@ -1,10 +1,10 @@
-import {hbox,wrap} from './lib/base-components';
-import {Button} from './components';
-import { Signal,render } from './lib/react-like';
-import {fetchJson} from '../common/interface';
+import { hbox, wrap } from './lib/base-components';
+import { Button } from './components';
+import { Signal, render } from './lib/react-like';
+import { fetchJson } from '../common/interface';
 
 
-const CounterDisplay = (counter:Signal<number>) => {
+const CounterDisplay = (counter: Signal<number>) => {
   return wrap()
     .css("width", "2rem")
     .css("text-align", "center")
@@ -14,12 +14,9 @@ const CounterDisplay = (counter:Signal<number>) => {
 const CounterDemo = () => {
   const counter = new Signal(0);
   const hello = wrap();
-  fetch('/api/hello').then(res => res.json()).then(json => hello.inner(JSON.stringify(json)))
-  fetchJson('gitLogs','main',2).then(logs => {
+  fetchJson('gitLogs', 'main', 2).then(logs => {
     hello.inner(JSON.stringify(logs));
   })
-
-
   const styledButton = () => Button().css("width", "5rem");
 
   return hbox()
@@ -33,7 +30,7 @@ const CounterDemo = () => {
       styledButton()
         .inner("-")
         .on("click", () => counter.set(counter.get() - 1)),
-        hello
+      hello
     );
 };
 
