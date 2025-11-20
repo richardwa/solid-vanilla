@@ -1,10 +1,9 @@
 import express, { Request, Response } from "express";
 import path from "path";
 import { configureRoutes } from "./routes";
-import { apiPath } from "../common/interface";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = process.env.PORT || 5178;
 
 configureRoutes(app);
 
@@ -17,6 +16,6 @@ app.use((req: Request, res: Response) => {
   res.sendFile(path.join(distPath, "index.html"));
 });
 
-app.listen(PORT, () => {
+app.listen(port, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
