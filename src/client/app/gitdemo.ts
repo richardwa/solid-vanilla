@@ -1,6 +1,6 @@
 import { hbox, vbox, div, fragment, grid } from "../lib/base-components";
-import { Button, ClickLink, NumberInput, TextInput } from "./components";
-import { signal, render, RNode } from "../lib";
+import { ClickLink, NumberInput, Title } from "./components";
+import { signal } from "../lib";
 import { fetchJson, GitLog } from "../../common/interface";
 import { formatDate } from "../../common/util";
 
@@ -8,16 +8,14 @@ export const GitDemo = () => {
   const maxLines = signal(5);
   const selectedBranch = signal<string>();
 
-  const title = (s: string) => div(s).css("font-weight", "bold");
   return vbox()
-    .css("padding", "1rem")
     .css("gap", "1rem")
     .inner(
       div("log limit: ", NumberInput(maxLines)),
       hbox()
         .css("gap", "1rem")
         .inner(
-          title("Branches"),
+          Title("Branches"),
           fragment().do(async (node) => {
             const branches = await fetchJson("gitBranches");
             selectedBranch.set(branches[0]);
@@ -36,7 +34,6 @@ export const GitDemo = () => {
           }),
         ),
       vbox(
-        title("Logs: "),
         grid("repeat(4,max-content)")
           .css("column-gap", "1rem")
           .watch([maxLines, selectedBranch], async (node) => {

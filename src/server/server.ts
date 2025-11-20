@@ -3,7 +3,7 @@ import path from "path";
 import { configureRoutes } from "./routes";
 
 const app = express();
-const port = process.env.PORT || 5178;
+const port = process.env.PORT || 5177;
 
 configureRoutes(app);
 
@@ -17,5 +17,5 @@ app.use((req: Request, res: Response) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`Server running at http://localhost:${port}`);
 });

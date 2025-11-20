@@ -1,5 +1,8 @@
 import { h, RNode, Signal } from "../lib";
 
+export const Title = (s: string) =>
+  h("div").css("font-weight", "bold").inner(s);
+
 export const Panel = (...children: Array<RNode | string>) =>
   h("div")
     .css("border-radius", "5px")

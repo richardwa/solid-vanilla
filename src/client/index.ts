@@ -1,6 +1,4 @@
 import { render } from "./lib";
-import { App } from "./app/main";
-import { router } from "./app/routes";
+import { App } from "./app/app";
 
 render(document.getElementById("app"), App());
-router.navigate("/");
