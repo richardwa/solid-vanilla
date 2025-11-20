@@ -5,7 +5,7 @@ example of react-like (more so solidjs-like) framework.  Great for understanding
 
 ### dom representation using functions
 this is similar to what jsx compiles to.  I can add jsx support, but there are use cases where the plain function calls actually work better.
-```
+```ts
 vbox()
     .inner(
         div("test 1"), 
@@ -13,7 +13,7 @@ vbox()
 ```
 
 ### async updates
-```
+```ts
 vbox().do(async (node) => {
     const branches = await fetch("/branches");
     node.inner(
@@ -23,7 +23,7 @@ vbox().do(async (node) => {
 ```
 
 ### signals / reactivity / watch
-```
+```ts
 const count = signal(0);
 div().watch(count, (node) => node.inner(count.get().toString()));
 setInterval(()=> {
@@ -32,7 +32,7 @@ setInterval(()=> {
 ```
 
 ### memoized components
-```
+```ts
  grid("repeat(4,max-content)")
     .watch([maxLines, selectedBranch], async (node) => {
         const branch = selectedBranch.get();
@@ -55,15 +55,30 @@ setInterval(()=> {
 
 ### inline css
 I do use tailwind, and i even like it.  but i do feel it is too complicated (build plugins + ide plugins)for what you get.  granted the usage of it is pretty good once you get the initial setup.  However i do feel plain inline css is 80% there
-```
+```ts
 vbox()
     .css("padding", "1rem")
     .css("gap", "1rem")
 ```
 
+### SPA Routing
+
+```ts
+// define routes
+const router = new Router();
+router.addRoute("/", () => GitDemo());
+
+// use routes
+router.navigate("/");
+
+// add router view into dom
+export const App = () => div(div("Title"), router.getRoot());
+
+```
+
 ### Client-Server bindings
 just add to interface, and implement server side.  client shares types using fetchJson
-```
+```ts
 // interface
 export type ServerApi = {
   gitBranches: () => Promise<string[]>;
