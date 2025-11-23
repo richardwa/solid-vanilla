@@ -4,6 +4,14 @@ import { signal } from "../lib";
 import { fetchJson, GitLog } from "../../common/interface";
 import { formatDate } from "../../common/util";
 
+const logRow = (log: GitLog) =>
+  fragment(
+    div(log.commitHash.slice(0, 10)),
+    div(formatDate(log.commitDate)),
+    div(log.commitAuthor),
+    div(log.commitMessage),
+  );
+
 export const GitDemo = () => {
   const maxLines = signal(5);
   const selectedBranch = signal<string>();
@@ -22,13 +30,10 @@ export const GitDemo = () => {
             node.inner(
               ...branches.map((branch) =>
                 ClickLink(branch)
-                  .on("click", () => selectedBranch.set(branch))
-                  .watch(selectedBranch, (node) =>
-                    node.css(
-                      "font-weight",
-                      selectedBranch.get() === branch ? "bold" : "normal",
-                    ),
-                  ),
+                  .attr("font-weight", () =>
+                    selectedBranch.get() === branch ? "bold" : "normal",
+                  )
+                  .on("click", () => selectedBranch.set(branch)),
               ),
             );
           }),
@@ -40,13 +45,6 @@ export const GitDemo = () => {
             const branch = selectedBranch.get();
             if (branch) {
               const logs = await fetchJson("gitLogs", branch, maxLines.get());
-              const logRow = (log: GitLog) =>
-                fragment(
-                  div(log.commitHash.slice(0, 10)),
-                  div(formatDate(log.commitDate)),
-                  div(log.commitAuthor),
-                  div(log.commitMessage),
-                );
               node.inner(
                 ...logs.map((log) =>
                   node.memo(

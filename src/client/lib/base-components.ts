@@ -1,16 +1,16 @@
-import { h, type RNode } from "./rnode";
+import { h, ChildNode } from "./rnode";
 
-export const href = (href: string, ...children: Array<RNode | string>) =>
+export const href = (href: string, ...children: Array<ChildNode>) =>
   h("a")
     .attr("href", href)
     .inner(...children);
 
-export const button = (...children: Array<RNode | string>) =>
+export const button = (...children: Array<ChildNode>) =>
   h("button")
     .attr("type", "button")
     .inner(...children);
 
-export const div = (...children: Array<RNode | string>) =>
+export const div = (...children: Array<ChildNode>) =>
   h("div").inner(...children);
 
 export const grid = (gridTemplateColumns: string) =>
@@ -18,18 +18,18 @@ export const grid = (gridTemplateColumns: string) =>
     .css("display", "grid")
     .css("grid-template-columns", gridTemplateColumns);
 
-export const fragment = (...children: Array<RNode | string>) =>
+export const fragment = (...children: Array<ChildNode>) =>
   h("div")
     .css("display", "contents")
     .inner(...children);
 
-export const hbox = (...children: Array<RNode | string>) =>
+export const hbox = (...children: Array<ChildNode>) =>
   h("span")
     .css("display", "flex")
     .css("gap", ".25rem")
     .inner(...children);
 
-export const vbox = (...children: Array<RNode | string>) =>
+export const vbox = (...children: Array<ChildNode>) =>
   h("div")
     .css("display", "flex")
     .css("flex-direction", "column")

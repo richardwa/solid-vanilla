@@ -1,3 +1,5 @@
+export const observers: Array<(s: Signal<unknown>) => void> = [];
+
 export class Signal<T> {
   val: T;
   old?: T;
@@ -6,14 +8,26 @@ export class Signal<T> {
     this.val = initial;
     this.subscribers = new Set();
   }
-  set(newVal: T) {
-    if (newVal === this.val) return;
+
+  set(newVal: T, forceTrigger = false) {
+    if (newVal === this.val) {
+      if (forceTrigger) this.trigger();
+      return;
+    }
     this.old = this.val;
     this.val = newVal;
+    this.trigger();
+  }
+
+  trigger() {
     this.subscribers.forEach((fn) => fn());
   }
 
   get() {
+    if (observers.length > 0) {
+      const last = observers[observers.length - 1];
+      last(this);
+    }
     return this.val;
   }
 

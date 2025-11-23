@@ -31,15 +31,11 @@ export const ClickLink = (...children: Array<RNode | string>) =>
 export const TextInput = (val: Signal<string>) =>
   h("input")
     .attr("type", "text")
-    .watch([val], (node) => {
-      (node.el as HTMLInputElement).value = val.get();
-    })
+    .attr("value", val)
     .on("change", (event) => val.set(event.target.value));
 
 export const NumberInput = (val: Signal<number>) =>
   h("input")
     .attr("type", "number")
-    .watch([val], (node) => {
-      (node.el as HTMLInputElement).value = `${val.get()}`;
-    })
+    .attr("value", () => `${val}`)
     .on("change", (event) => val.set(event.target.value));

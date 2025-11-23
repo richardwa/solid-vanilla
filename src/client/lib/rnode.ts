@@ -1,15 +1,19 @@
-﻿import { Signal } from "./signal";
+﻿import { fragment } from "./base-components";
+import { Signal, observers } from "./signal";
 const debug = (...msg: any[]) => {
   // @ts-ignore
   if (import.meta.env.DEV) {
     console.debug(RNode.name, ...msg);
   }
 };
-export class RNode {
+
+export type ChildNode = BaseNode | string;
+
+export class BaseNode {
   el: HTMLElement;
-  childrenSet: Set<RNode | string>;
+  childrenSet: Set<ChildNode>;
   unmountListeners: Array<() => void>;
-  memoMap?: Map<string | number, RNode | string>;
+  memoMap?: Map<string | number, ChildNode>;
 
   constructor(tag: string) {
     this.el = document.createElement(tag);
@@ -21,7 +25,7 @@ export class RNode {
     this.el.remove();
     debug("unmounted");
     this.childrenSet.forEach((r) => {
-      if (typeof r !== "string") r.unmount();
+      if (r instanceof BaseNode) r.unmount();
     });
     this.unmountListeners.forEach((fn) => fn());
   }
@@ -30,51 +34,9 @@ export class RNode {
     this.unmountListeners.push(fn);
     return this;
   }
-
-  attr(key: string, val?: string | null) {
-    const element = this.el;
-    if (key == null) {
-      while (element.attributes.length > 0) {
-        element.removeAttribute(element.attributes[0].name);
-      }
-    } else if (val === null) {
-      element.removeAttribute(key);
-    } else {
-      element.setAttribute(key, val ?? "");
-    }
-    return this;
-  }
-
-  cn(name: string, add = true) {
-    if (add) {
-      this.el.classList.add(name);
-    } else {
-      this.el.classList.remove(name);
-    }
-    return this;
-  }
-
-  css(name: string, ...values: any) {
-    // @ts-ignore
-    this.el.style[name] = values ? values.join(" ") : "";
-    return this;
-  }
-
-  on(event: string, fn: (event: any) => void) {
-    const element = this.el;
-    if (event == null) {
-      // true keeps children, false removes them
-      const cleanElement = element.cloneNode(true);
-      element.replaceWith(cleanElement);
-    } else {
-      this.el.addEventListener(event, fn);
-    }
-    return this;
-  }
-
   watch(
     signals: Signal<unknown> | Signal<unknown>[],
-    fn: (n: RNode) => void,
+    fn: (n: BaseNode) => void,
     now = true,
   ) {
     const register = (signal: Signal<unknown>) => {
@@ -89,11 +51,10 @@ export class RNode {
     return this;
   }
 
-  do(fn: (node: RNode) => void) {
+  do(fn: (node: BaseNode) => void) {
     fn(this);
     return this;
   }
-
   memo(key: string | number, fn: () => RNode | string) {
     const localMemoMap = this.memoMap ?? new Map();
     if (this.memoMap === undefined) {
@@ -115,18 +76,133 @@ export class RNode {
     return newVal;
   }
 
-  inner(...newChildren: Array<RNode | string>) {
-    const newChildElements = newChildren.map((r) =>
-      typeof r === "string" ? r : r.el,
-    );
+  inner(...newChildren: Array<ChildNode>) {
+    const newChildElements = newChildren.map((r) => {
+      if (typeof r === "string") {
+        return r;
+      } else {
+        return r.el;
+      }
+    });
+
     this.el.replaceChildren(...newChildElements);
     const newChildrenSet = new Set(newChildren);
     this.childrenSet.forEach((child) => {
-      if (!newChildrenSet.has(child) && typeof child !== "string") {
+      if (!newChildrenSet.has(child) && child instanceof BaseNode) {
         child.unmount();
       }
     });
     this.childrenSet = newChildrenSet;
+    return this;
+  }
+
+  createEffect(fn: () => void) {
+    observers.push((signal) => {
+      const clear = signal.on(fn);
+      this.unmountListeners.push(clear);
+    });
+    const val = fn();
+    observers.pop();
+    return val;
+  }
+}
+
+type AttributeValue = string | null | undefined;
+export class RNode extends BaseNode {
+  constructor(tag: string) {
+    super(tag);
+  }
+
+  private _setAttr(key: string, val: AttributeValue) {
+    const element = this.el;
+    if (val === null) {
+      element.removeAttribute(key);
+    } else if (val === undefined) {
+      element.setAttribute(key, "");
+    } else if (typeof val === "string") {
+      element.setAttribute(key, val);
+    }
+  }
+
+  attr(
+    key: string,
+    val?: AttributeValue | (() => AttributeValue) | Signal<AttributeValue>,
+  ) {
+    const element = this.el;
+    if (key == null) {
+      while (element.attributes.length > 0) {
+        element.removeAttribute(element.attributes[0].name);
+      }
+    } else if (val instanceof Signal) {
+      this.createEffect(() => {
+        this._setAttr(key, val.get());
+      });
+    } else if (typeof val === "function") {
+      this.createEffect(() => {
+        this._setAttr(key, val());
+      });
+    } else {
+      this._setAttr(key, val);
+    }
+
+    return this;
+  }
+
+  private _cn(name: string, add: boolean) {
+    if (add) {
+      this.el.classList.add(name);
+    } else {
+      this.el.classList.remove(name);
+    }
+  }
+
+  cn(name: string | (() => string) | Signal<string>, add = true) {
+    if (name instanceof Signal) {
+      this.createEffect(() => {
+        this._cn(name.get(), add);
+      });
+    } else if (typeof name === "function") {
+      this.createEffect(() => {
+        this._cn(name(), add);
+      });
+    } else {
+      this._cn(name, add);
+    }
+    return this;
+  }
+
+  css(name: string, val: string | (() => string) | Signal<string>) {
+    const element = this.el;
+    const _name = name as unknown as number;
+
+    if (val instanceof Signal) {
+      this.createEffect(() => {
+        element.style[_name] = val.get();
+      });
+    } else if (typeof val === "function") {
+      this.createEffect(() => {
+        element.style[_name] = val();
+      });
+    } else {
+      element.style[_name] = val;
+    }
+    return this;
+  }
+
+  on(event: string, fn: (event: any) => void) {
+    const element = this.el;
+    if (event == null) {
+      // true keeps children, false removes them
+      const cleanElement = element.cloneNode(true);
+      element.replaceWith(cleanElement);
+    } else {
+      this.el.addEventListener(event, fn);
+    }
+    return this;
+  }
+
+  do(fn: (node: RNode) => void) {
+    fn(this);
     return this;
   }
 }
