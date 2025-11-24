@@ -1,13 +1,13 @@
-import { BaseNode, h } from "./rnode";
+import { RNode, h } from "./rnode";
 
 type Route = {
   path: string;
-  component: (params: Record<string, string>) => BaseNode;
+  component: (params: Record<string, string>) => RNode;
 };
 
 export class Router {
   private routes: Route[] = [];
-  private readonly root: BaseNode;
+  private readonly root: RNode;
 
   constructor() {
     this.root = h("div");
@@ -19,10 +19,7 @@ export class Router {
     return this.root;
   }
 
-  addRoute(
-    path: string,
-    component: (params: Record<string, string>) => BaseNode,
-  ) {
+  addRoute(path: string, component: (params: Record<string, string>) => RNode) {
     this.routes.push({ path, component });
   }
 

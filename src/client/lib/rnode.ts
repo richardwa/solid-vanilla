@@ -1,5 +1,5 @@
-﻿import { fragment } from "./base-components";
-import { Signal, observers } from "./signal";
+﻿import { Signal, observers } from "./signal";
+
 const debug = (...msg: any[]) => {
   // @ts-ignore
   if (import.meta.env.DEV) {
@@ -7,9 +7,11 @@ const debug = (...msg: any[]) => {
   }
 };
 
+export type BaseNode = { el: HTMLElement };
 export type ChildNode = BaseNode | string;
+export type AttributeValue = string | null | undefined;
 
-export class BaseNode {
+export class RNode implements BaseNode {
   el: HTMLElement;
   childrenSet: Set<ChildNode>;
   unmountListeners: Array<() => void>;
@@ -25,7 +27,7 @@ export class BaseNode {
     this.el.remove();
     debug("unmounted");
     this.childrenSet.forEach((r) => {
-      if (r instanceof BaseNode) r.unmount();
+      if (r instanceof RNode) r.unmount();
     });
     this.unmountListeners.forEach((fn) => fn());
   }
@@ -34,9 +36,10 @@ export class BaseNode {
     this.unmountListeners.push(fn);
     return this;
   }
+
   watch(
     signals: Signal<unknown> | Signal<unknown>[],
-    fn: (n: BaseNode) => void,
+    fn: (n: RNode) => void,
     now = true,
   ) {
     const register = (signal: Signal<unknown>) => {
@@ -51,10 +54,6 @@ export class BaseNode {
     return this;
   }
 
-  do(fn: (node: BaseNode) => void) {
-    fn(this);
-    return this;
-  }
   memo(key: string | number, fn: () => RNode | string) {
     const localMemoMap = this.memoMap ?? new Map();
     if (this.memoMap === undefined) {
@@ -88,7 +87,7 @@ export class BaseNode {
     this.el.replaceChildren(...newChildElements);
     const newChildrenSet = new Set(newChildren);
     this.childrenSet.forEach((child) => {
-      if (!newChildrenSet.has(child) && child instanceof BaseNode) {
+      if (!newChildrenSet.has(child) && child instanceof RNode) {
         child.unmount();
       }
     });
@@ -104,13 +103,6 @@ export class BaseNode {
     const val = fn();
     observers.pop();
     return val;
-  }
-}
-
-type AttributeValue = string | null | undefined;
-export class RNode extends BaseNode {
-  constructor(tag: string) {
-    super(tag);
   }
 
   private _setAttr(key: string, val: AttributeValue) {
