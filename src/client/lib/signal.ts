@@ -4,6 +4,7 @@ export class Signal<T> {
   val: T;
   old?: T;
   subscribers: Set<() => void>;
+
   constructor(initial: T) {
     this.val = initial;
     this.subscribers = new Set();
@@ -43,8 +44,26 @@ export class Signal<T> {
   }
 }
 
-export function signal<T>(): Signal<T | undefined>;
-export function signal<T>(v: T): Signal<T>;
-export function signal<T>(v?: T) {
+type SignalFunc = {
+  <T>(): Signal<T | undefined>;
+  <T>(param: T): Signal<T>;
+};
+export const signal: SignalFunc = <T>(v?: T) => {
   return new Signal(v);
-}
+};
+
+export type OptionalSignal<T> = T | Signal<T> | (() => T);
+export const getValue = <T>(
+  optionalSignal?: OptionalSignal<T>,
+): T | undefined => {
+  if (optionalSignal == null) return optionalSignal;
+  if (optionalSignal instanceof Signal) {
+    return optionalSignal.get();
+  }
+  if (typeof optionalSignal === "function") {
+    // @ts-ignore
+    return optionalSignal();
+  }
+
+  return optionalSignal;
+};

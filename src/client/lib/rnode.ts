@@ -1,4 +1,4 @@
-﻿import { Signal, observers } from "./signal";
+﻿import { Signal, observers, OptionalSignal } from "./signal";
 
 const debug = (...msg: any[]) => {
   // @ts-ignore
@@ -7,13 +7,17 @@ const debug = (...msg: any[]) => {
   }
 };
 
-export type BaseNode = { el: HTMLElement };
-export type ChildNode = BaseNode | string;
-export type AttributeValue = string | null | undefined;
+export type BaseNode = {
+  el: HTMLElement;
+  inner(first?: OptionalSignal<BaseNode | string>): BaseNode;
+  inner(...nodes: OptionalSignal<BaseNode>[]): BaseNode;
+};
+export type ChildNode = BaseNode | string | undefined;
+type AttributeValue = string | null | undefined;
 
 export class RNode implements BaseNode {
   el: HTMLElement;
-  childrenSet: Set<ChildNode>;
+  childrenSet: Set<OptionalSignal<ChildNode>>;
   unmountListeners: Array<() => void>;
   memoMap?: Map<string | number, ChildNode>;
 
@@ -54,7 +58,15 @@ export class RNode implements BaseNode {
     return this;
   }
 
-  memo(key: string | number, fn: () => RNode | string) {
+  setInterval(fn: (n: BaseNode) => void, interval: number) {
+    const id = setInterval(() => {
+      fn(this);
+    }, interval);
+    this.unmountListeners.push(() => clearInterval(id));
+    return id;
+  }
+
+  memo(key: string | number, fn: () => BaseNode | string) {
     const localMemoMap = this.memoMap ?? new Map();
     if (this.memoMap === undefined) {
       this.memoMap = localMemoMap;
@@ -75,15 +87,45 @@ export class RNode implements BaseNode {
     return newVal;
   }
 
-  inner(...newChildren: Array<ChildNode>) {
-    const newChildElements = newChildren.map((r) => {
-      if (typeof r === "string") {
-        return r;
+  private _innerResolveSignal(fn: () => ChildNode, i: number) {
+    let firstRun = true;
+    return this.createEffect(() => {
+      const child = fn();
+      let resolved: string | HTMLElement;
+      if (!child) {
+        resolved = "";
+      } else if (typeof child === "string") {
+        resolved = child;
       } else {
-        return r.el;
+        resolved = child.el;
       }
+      if (firstRun) {
+        firstRun = false;
+      } else {
+        if (typeof resolved === "string" && this.el.children.length <= 0) {
+          this.el.textContent = resolved;
+        } else {
+          this.el.children[i].replaceWith(resolved);
+        }
+      }
+      return resolved;
     });
+  }
 
+  inner(...newChildren: any[]) {
+    const newChildElements: Array<string | HTMLElement> = newChildren
+      .filter((s) => s)
+      .map((r, i) => {
+        if (r == null || typeof r === "string") {
+          return r ?? "";
+        } else if (typeof r === "function") {
+          return this._innerResolveSignal(r, i);
+        } else if (r instanceof Signal) {
+          return this._innerResolveSignal(() => r.get(), i);
+        } else {
+          return r.el;
+        }
+      });
     this.el.replaceChildren(...newChildElements);
     const newChildrenSet = new Set(newChildren);
     this.childrenSet.forEach((child) => {
@@ -92,10 +134,10 @@ export class RNode implements BaseNode {
       }
     });
     this.childrenSet = newChildrenSet;
-    return this;
+    return this as BaseNode;
   }
 
-  createEffect(fn: () => void) {
+  createEffect<T>(fn: () => T) {
     observers.push((signal) => {
       const clear = signal.on(fn);
       this.unmountListeners.push(clear);
@@ -111,7 +153,7 @@ export class RNode implements BaseNode {
       element.removeAttribute(key);
     } else if (val === undefined) {
       element.setAttribute(key, "");
-    } else if (typeof val === "string") {
+    } else {
       element.setAttribute(key, val);
     }
   }
@@ -203,7 +245,7 @@ export const h = (tag: string) => new RNode(tag);
 
 export const render = (
   element: HTMLElement | null,
-  ...nodes: Array<RNode | string>
+  ...nodes: Array<BaseNode | string>
 ) => {
   if (!element) throw "missing root element";
 

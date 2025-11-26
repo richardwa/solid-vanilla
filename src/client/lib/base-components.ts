@@ -1,37 +1,26 @@
-import { h, ChildNode } from "./rnode";
+import { h } from "./rnode";
 
-export const href = (href: string, ...children: Array<ChildNode>) =>
-  h("a")
-    .attr("href", href)
-    .inner(...children);
+export const href = (href: string) => h("a").attr("href", href);
 
-export const button = (...children: Array<ChildNode>) =>
-  h("button")
-    .attr("type", "button")
-    .inner(...children);
+export const button = () => h("button").attr("type", "button");
 
-export const div = (...children: Array<ChildNode>) =>
-  h("div").inner(...children);
+export const div = () => h("div");
+
+export const span = () => h("span");
 
 export const grid = (gridTemplateColumns: string) =>
   h("div")
     .css("display", "grid")
     .css("grid-template-columns", gridTemplateColumns);
 
-export const fragment = (...children: Array<ChildNode>) =>
-  h("div")
-    .css("display", "contents")
-    .inner(...children);
+export const fragment = () => h("div").css("display", "contents");
 
-export const hbox = (...children: Array<ChildNode>) =>
-  h("span")
-    .css("display", "flex")
-    .css("gap", ".25rem")
-    .inner(...children);
+export const gap = ".25rem";
+export const hbox = () =>
+  h("span").css("display", "flex").css("align-items", "center").css("gap", gap);
 
-export const vbox = (...children: Array<ChildNode>) =>
+export const vbox = () =>
   h("div")
     .css("display", "flex")
     .css("flex-direction", "column")
-    .css("gap", ".25rem")
-    .inner(...children);
+    .css("gap", gap);

@@ -6,6 +6,9 @@ export const App = () =>
   div()
     .css("padding", "0.5rem")
     .inner(
-      Title("Git Logs").css("font-weight", "bold").css("margin-bottom", "1rem"),
+      Title()
+        .css("font-weight", "bold")
+        .css("margin-bottom", "1rem")
+        .inner("Git Logs"),
       router.getRoot(),
     );
