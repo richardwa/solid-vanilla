@@ -5,19 +5,20 @@ type Route = {
   component: (params: Record<string, string>) => BaseNode;
 };
 
-export class Router {
-  private routes: Route[] = [];
-  private readonly root: BaseNode;
-  private base: string;
-  private context: string;
+abstract class RouterBase {
+  protected routes: Route[] = [];
+  protected readonly root: BaseNode;
 
-  constructor(context: string = "") {
+  constructor() {
     this.root = h("div");
-    const { protocol, host } = window.location;
-    this.context = context;
-    this.base = `${protocol}//${host}`;
-    window.addEventListener("popstate", () => this.render());
+    this.initListener();
   }
+
+  abstract initListener(): void;
+
+  abstract navigate(path: string): void;
+
+  abstract getCurrentRoute(): string;
 
   getRoot() {
     this.render();
@@ -31,14 +32,11 @@ export class Router {
     this.routes.push({ path, component });
   }
 
-  navigate(path: string) {
-    history.pushState({}, "", `${this.base}/${this.context}${path}`);
-    this.render();
-  }
-
-  private matchRoute(
-    pathname: string,
-  ): { route: Route; params: Record<string, string> } | null {
+  protected matchRoute(): {
+    route: Route;
+    params: Record<string, string>;
+  } | null {
+    const pathname = this.getCurrentRoute();
     for (const route of this.routes) {
       const paramNames: string[] = [];
       const regexPath = route.path.replace(/:([^/]+)/g, (_, key) => {
@@ -58,10 +56,8 @@ export class Router {
     return null;
   }
 
-  private render() {
-    const currentPath = window.location.pathname;
-    const removedBaseContext = currentPath.substring(this.context.length + 1);
-    const match = this.matchRoute(removedBaseContext);
+  protected render() {
+    const match = this.matchRoute();
     this.root.inner();
     if (match) {
       const node = match.route.component(match.params);
@@ -69,5 +65,44 @@ export class Router {
     } else {
       this.root.inner("Page Not Found");
     }
+  }
+}
+
+export class Router extends RouterBase {
+  protected base: string;
+  protected context: string;
+
+  constructor(context: string = "") {
+    super();
+    const { protocol, host } = window.location;
+    this.context = context;
+    this.base = `${protocol}//${host}`;
+  }
+  initListener(): void {
+    window.addEventListener("popstate", () => this.render());
+  }
+
+  navigate(path: string) {
+    history.pushState({}, "", `${this.base}/${this.context}${path}`);
+    this.render();
+  }
+
+  getCurrentRoute() {
+    const currentPath = window.location.pathname;
+    const removedBaseContext = currentPath.substring(this.context.length + 1);
+    return removedBaseContext;
+  }
+}
+
+export class HashRouter extends RouterBase {
+  initListener(): void {
+    window.addEventListener("hashchange", () => this.render());
+  }
+  navigate(path: string) {
+    location.hash = path.startsWith("#") ? path : `#${path}`;
+    this.render();
+  }
+  getCurrentRoute() {
+    return location.hash.replace(/^#/, "") || "/";
   }
 }
