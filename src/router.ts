@@ -1,5 +1,12 @@
 import { BaseNode, h } from "./rnode";
 
+const debug = (...msg: any[]) => {
+  // @ts-ignore
+  if (import.meta.env.DEV) {
+    console.debug(RouterBase.name, ...msg);
+  }
+};
+
 type Route = {
   path: string;
   component: (params: Record<string, string>) => BaseNode;
@@ -9,8 +16,8 @@ abstract class RouterBase {
   protected routes: Route[] = [];
   protected readonly root: BaseNode;
 
-  constructor() {
-    this.root = h("div");
+  constructor(root: BaseNode) {
+    this.root = root;
     this.initListener();
   }
 
@@ -41,12 +48,12 @@ abstract class RouterBase {
       const paramNames: string[] = [];
       const regexPath = route.path.replace(/:([^/]+)/g, (_, key) => {
         paramNames.push(key);
-        return "(.+?)";
+        return "(.*?)";
       });
 
       const regex = new RegExp(`^${regexPath}$`);
       const match = pathname.match(regex);
-
+      debug({regexPath, pathname, matched: match != null});
       if (match) {
         const params: Record<string, string> = {};
         paramNames.forEach((name, i) => (params[name] = match[i + 1]));
@@ -58,7 +65,6 @@ abstract class RouterBase {
 
   protected render() {
     const match = this.matchRoute();
-    this.root.inner();
     if (match) {
       const node = match.route.component(match.params);
       this.root.inner(node);
@@ -72,8 +78,8 @@ export class Router extends RouterBase {
   protected base: string;
   protected context: string;
 
-  constructor(context: string = "") {
-    super();
+  constructor(root: BaseNode, context: string = "") {
+    super(root);
     const { protocol, host } = window.location;
     this.context = context;
     this.base = `${protocol}//${host}`;

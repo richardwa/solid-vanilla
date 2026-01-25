@@ -16,7 +16,8 @@ export const grid = (gridTemplateColumns: string) =>
 export const fragment = () => h("div").css("display", "contents");
 
 export const gap = ".25rem";
-export const hbox = () => h("span").css("display", "flex").css("gap", gap);
+export const hbox = () =>
+  h("span").css("display", "flex").css("gap", gap);
 
 export const vbox = () =>
   h("div")

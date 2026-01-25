@@ -16,7 +16,6 @@ export const collapsibleSection = (props: Props) => {
 
   if (open instanceof Signal) {
     node.on("toggle", (event) => {
-      console.log("toggle", event.target.open);
       open.set(event.target.open);
     });
   }
