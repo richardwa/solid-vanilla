@@ -43,7 +43,7 @@ export class Router {
       const paramNames: string[] = [];
       const regexPath = route.path.replace(/:([^/]+)/g, (_, key) => {
         paramNames.push(key);
-        return "([^/]+)";
+        return "(.+?)";
       });
 
       const regex = new RegExp(`^${regexPath}$`);
@@ -61,7 +61,6 @@ export class Router {
   private render() {
     const currentPath = window.location.pathname;
     const removedBaseContext = currentPath.substring(this.context.length + 1);
-    console.log(removedBaseContext);
     const match = this.matchRoute(removedBaseContext);
     this.root.inner();
     if (match) {
