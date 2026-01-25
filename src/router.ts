@@ -8,9 +8,13 @@ type Route = {
 export class Router {
   private routes: Route[] = [];
   private readonly root: BaseNode;
+  private baseContext: string;
 
-  constructor() {
+  constructor(baseContext: string = ".") {
     this.root = h("div");
+    this.baseContext = baseContext.endsWith("/")
+      ? baseContext
+      : baseContext + "/";
     window.addEventListener("popstate", () => this.render());
   }
 
@@ -27,7 +31,7 @@ export class Router {
   }
 
   navigate(path: string) {
-    history.pushState({}, "", path);
+    history.pushState({}, "", this.baseContext + path);
     this.render();
   }
 
@@ -55,7 +59,8 @@ export class Router {
 
   private render() {
     const currentPath = window.location.pathname;
-    const match = this.matchRoute(currentPath);
+    const removedBaseContext = currentPath.substring(this.baseContext.length);
+    const match = this.matchRoute(removedBaseContext);
     this.root.inner();
     if (match) {
       const node = match.route.component(match.params);
