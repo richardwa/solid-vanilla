@@ -4,6 +4,7 @@ export class Signal<T> {
   val: T;
   old?: T;
   subscribers: Set<() => void>;
+  storageKey?: string;
 
   constructor(initial: T) {
     this.val = initial;
@@ -66,4 +67,15 @@ export const getValue = <T>(
   }
 
   return optionalSignal;
+};
+
+export const persist = <T>(sig: Signal<T>, key: string) => {
+  const stored = localStorage.getItem(key);
+  if (typeof stored === "string") {
+    sig.set(JSON.parse(stored));
+  }
+  sig.on(() => {
+    const val = sig.get();
+  });
+  return sig;
 };

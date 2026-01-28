@@ -53,7 +53,7 @@ abstract class RouterBase {
 
       const regex = new RegExp(`^${regexPath}$`);
       const match = pathname.match(regex);
-      debug({regexPath, pathname, matched: match != null});
+      debug({ regexPath, pathname, matched: match != null });
       if (match) {
         const params: Record<string, string> = {};
         paramNames.forEach((name, i) => (params[name] = match[i + 1]));
