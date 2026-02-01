@@ -43,6 +43,18 @@ export class Signal<T> {
     // allow caller a handle on unregister
     return () => this.subscribers.delete(fn);
   }
+
+  persistAs(key: string) {
+    const stored = localStorage.getItem(key);
+    if (typeof stored === "string") {
+      this.set(JSON.parse(stored));
+    }
+    this.on(() => {
+      const val = this.get();
+      localStorage.setItem(key, JSON.stringify(val));
+    });
+    return this;
+  }
 }
 
 type SignalFunc = {
@@ -67,15 +79,4 @@ export const getValue = <T>(
   }
 
   return optionalSignal;
-};
-
-export const persist = <T>(sig: Signal<T>, key: string) => {
-  const stored = localStorage.getItem(key);
-  if (typeof stored === "string") {
-    sig.set(JSON.parse(stored));
-  }
-  sig.on(() => {
-    const val = sig.get();
-  });
-  return sig;
 };
