@@ -42,7 +42,7 @@ abstract class RouterBase {
       const paramNames: string[] = [];
       const regexPath = route.path.replace(/:([^/]+)/g, (_, key) => {
         paramNames.push(key);
-        return "(.*?)";
+        return "([^/]+)";
       });
 
       const regex = new RegExp(`^${regexPath}$`);
@@ -83,14 +83,14 @@ export class Router extends RouterBase {
   }
 
   navigate(path: string) {
-    history.pushState({}, "", `${this.base}/${this.context}${path}`);
+    history.pushState({}, "", `${this.base}${this.context}${path}`);
     this.render();
   }
 
   getCurrentRoute() {
     const currentPath = window.location.pathname;
-    const removedBaseContext = currentPath.substring(this.context.length + 1);
-    return removedBaseContext;
+    // pathname is "/" + context + route; keep the leading slash on the route
+    return "/" + currentPath.substring(this.context.length + 1);
   }
 }
 

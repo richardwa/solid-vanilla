@@ -43,10 +43,21 @@ export function applyClass(
   name: string | (() => string) | Signal<string>,
   add = true,
 ) {
+  // For dynamic names, remember the previously applied class so a change
+  // removes it before adding the new one (otherwise classes accumulate).
+  let prev: string | undefined;
+  const apply = (next: string) => {
+    if (prev !== undefined && prev !== next) {
+      setClass(node.el, prev, false);
+    }
+    setClass(node.el, next, add);
+    prev = next;
+  };
+
   if (name instanceof Signal) {
-    node.createEffect(() => setClass(node.el, name.get(), add));
+    node.createEffect(() => apply(name.get()));
   } else if (typeof name === "function") {
-    node.createEffect(() => setClass(node.el, name(), add));
+    node.createEffect(() => apply(name()));
   } else {
     setClass(node.el, name, add);
   }

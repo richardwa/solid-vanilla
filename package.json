@@ -5,11 +5,13 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "format": "bun x prettier -w *.json ./src",
+    "test": "bun test",
+    "format": "bun x prettier -w *.json ./src ./test",
     "prebuild": "bun run format",
     "build": "tsc"
   },
   "devDependencies": {
+    "@happy-dom/global-registrator": "^20.14.3",
     "prettier": "^3.6.2",
     "typescript": "~5.9.3"
   }
