@@ -1,6 +1,6 @@
 import { describe, expect, it, test } from "bun:test";
-import { h } from "../src/rnode/rnode";
-import { signal } from "../src/signal";
+import { h } from "./rnode";
+import { signal } from "../signal";
 
 describe("attr", () => {
   it("updates the attribute when a signal changes", () => {

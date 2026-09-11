@@ -1,5 +1,5 @@
 import { describe, expect, it, test } from "bun:test";
-import { h } from "../src/rnode/rnode";
+import { h } from "./rnode";
 
 describe("on", () => {
   it("invokes the handler when the event fires", () => {

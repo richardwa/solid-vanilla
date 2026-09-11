@@ -1,5 +1,5 @@
 import { describe, expect, it, test } from "bun:test";
-import { getValue, signal } from "../src/signal";
+import { getValue, signal } from "./signal";
 
 describe("Signal", () => {
   it("notifies subscribers on change", () => {

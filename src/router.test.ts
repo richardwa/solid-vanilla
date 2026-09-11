@@ -1,6 +1,7 @@
 import { describe, expect, it, test } from "bun:test";
-import { HashRouter, Router } from "../src/router";
-import { h, type BaseNode } from "../src/rnode/rnode";
+import { HashRouter, Router } from "./router";
+import { h } from "./rnode/rnode";
+import type { BaseNode } from "./rnode/types";
 
 const stubRoot = () => h("div");
 

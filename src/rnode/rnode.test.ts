@@ -1,6 +1,6 @@
 import { describe, expect, it, test } from "bun:test";
-import { h, render } from "../src/rnode/rnode";
-import { signal } from "../src/signal";
+import { h, render } from "./rnode";
+import { signal } from "../signal";
 
 describe("RNode.inner — dynamic children", () => {
   it("renders a signal child and updates it in place", () => {
@@ -144,9 +144,9 @@ describe("RNode.memo", () => {
 
   it("drops the cache entry when the memoized node unmounts", () => {
     const node = h("div");
-    const child = node.memo("k1", () => h("p"));
+    const child = node.memo("k1", () => h("p")) as ReturnType<typeof h>;
     child.unmount();
-    const rebuilt = node.memo("k1", () => h("span"));
+    const rebuilt = node.memo("k1", () => h("span")) as ReturnType<typeof h>;
     expect(rebuilt.el.tagName).toBe("SPAN");
   });
 });
