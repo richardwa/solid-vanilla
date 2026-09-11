@@ -1,11 +1,5 @@
 import { BaseNode, h } from "./rnode";
-
-const debug = (...msg: any[]) => {
-  // @ts-ignore
-  if (import.meta.env.DEV) {
-    console.debug(RouterBase.name, ...msg);
-  }
-};
+import { debug } from "./rnode/debug";
 
 type Route = {
   path: string;
@@ -53,7 +47,7 @@ abstract class RouterBase {
 
       const regex = new RegExp(`^${regexPath}$`);
       const match = pathname.match(regex);
-      debug({ regexPath, pathname, matched: match != null });
+      debug("Router", { regexPath, pathname, matched: match != null });
       if (match) {
         const params: Record<string, string> = {};
         paramNames.forEach((name, i) => (params[name] = match[i + 1]));
