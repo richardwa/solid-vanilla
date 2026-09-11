@@ -15,21 +15,29 @@ export type BaseNode = {
 export type ChildNode = BaseNode | string | undefined;
 type AttributeValue = string | null | undefined;
 
+type ChildEffectCleanup = (keep?: Set<OptionalSignal<ChildNode>>) => void;
+
 export class RNode implements BaseNode {
   el: HTMLElement;
   childrenSet: Set<OptionalSignal<ChildNode>>;
   unmountListeners: Array<() => void>;
+  // effects created by the last inner() call; disposed when inner() runs again
+  childEffectCleanups: Array<ChildEffectCleanup>;
   memoMap?: Map<string | number, ChildNode>;
 
   constructor(tag: string) {
     this.el = document.createElement(tag);
     this.childrenSet = new Set();
     this.unmountListeners = [];
+    this.childEffectCleanups = [];
   }
 
   unmount() {
     this.el.remove();
     debug("unmounted");
+    const cleanups = this.childEffectCleanups;
+    this.childEffectCleanups = [];
+    cleanups.forEach((cleanup) => cleanup());
     this.childrenSet.forEach((r) => {
       if (r instanceof RNode) r.unmount();
     });
@@ -87,52 +95,107 @@ export class RNode implements BaseNode {
     return newVal;
   }
 
-  private _innerResolveSignal(fn: () => ChildNode, i: number) {
-    let firstRun = true;
-    return this.createEffect(() => {
+  // Replaces the node rendered for one dynamic child slot. The slot's position
+  // is marked by a permanent comment-node anchor, so updates insert relative to
+  // the anchor instead of indexing into el.children (which only counts
+  // elements, not text nodes). Returns a cleanup that unsubscribes the effect
+  // and unmounts the child it last rendered (unless `keep` says it survives).
+  private _innerResolveSignal(fn: () => ChildNode, anchor: Comment) {
+    const clears: Array<() => void> = [];
+    let current: Text | HTMLElement | null = null;
+    let currentRNode: RNode | undefined;
+
+    const run = () => {
       const child = fn();
-      let resolved: string | HTMLElement;
-      if (!child) {
-        resolved = "";
-      } else if (typeof child === "string") {
-        resolved = child;
-      } else {
-        resolved = child.el;
+      const resolved: string | HTMLElement =
+        child == null ? "" : typeof child === "string" ? child : child.el;
+
+      // skip no-op updates
+      if (currentRNode === child) return;
+      if (
+        current instanceof Text &&
+        typeof resolved === "string" &&
+        current.textContent === resolved
+      ) {
+        return;
       }
-      if (firstRun) {
-        firstRun = false;
-      } else {
-        if (typeof resolved === "string" && this.el.children.length <= 0) {
-          this.el.textContent = resolved;
-        } else {
-          this.el.children[i].replaceWith(resolved);
-        }
+
+      const next: Text | HTMLElement =
+        typeof resolved === "string"
+          ? document.createTextNode(resolved)
+          : resolved;
+
+      if (currentRNode) {
+        currentRNode.unmount();
+        currentRNode = undefined;
+      } else if (current) {
+        current.remove();
       }
-      return resolved;
+      this.el.insertBefore(next, anchor);
+      current = next;
+      if (child instanceof RNode) {
+        currentRNode = child;
+      }
+    };
+
+    observers.push((signal) => {
+      const clear = signal.on(run);
+      clears.push(clear);
+      this.unmountListeners.push(clear);
     });
+    run();
+    observers.pop();
+
+    return (keep?: Set<OptionalSignal<ChildNode>>) => {
+      clears.forEach((clear) => clear());
+      if (currentRNode && !(keep && keep.has(currentRNode))) {
+        currentRNode.unmount();
+      }
+      currentRNode = undefined;
+      current = null;
+    };
   }
 
-  inner(...newChildren: any[]) {
-    const newChildElements: Array<string | HTMLElement> = newChildren
-      .filter((s) => s)
-      .map((r, i) => {
-        if (r == null || typeof r === "string") {
-          return r ?? "";
-        } else if (typeof r === "function") {
-          return this._innerResolveSignal(r, i);
-        } else if (r instanceof Signal) {
-          return this._innerResolveSignal(() => r.get(), i);
-        } else {
-          return r.el;
-        }
-      });
-    this.el.replaceChildren(...newChildElements);
+  inner(...newChildren: OptionalSignal<ChildNode>[]) {
     const newChildrenSet = new Set(newChildren);
+
+    // dispose effects created by the previous inner() call before rebuilding
+    const staleCleanups = this.childEffectCleanups;
+    this.childEffectCleanups = [];
+    staleCleanups.forEach((cleanup) => cleanup(newChildrenSet));
+
+    // unmount children that are not part of the new set
     this.childrenSet.forEach((child) => {
       if (!newChildrenSet.has(child) && child instanceof RNode) {
         child.unmount();
       }
     });
+
+    const dynamic: Array<{ fn: () => ChildNode; anchor: Comment }> = [];
+    const parts: Node[] = [];
+    for (const child of newChildren) {
+      if (child == null) continue;
+      if (child instanceof Signal) {
+        const anchor = document.createComment("");
+        dynamic.push({ fn: () => child.get(), anchor });
+        parts.push(anchor);
+      } else if (typeof child === "function") {
+        const anchor = document.createComment("");
+        dynamic.push({ fn: child as () => ChildNode, anchor });
+        parts.push(anchor);
+      } else if (typeof child === "string") {
+        parts.push(document.createTextNode(child));
+      } else {
+        parts.push(child.el);
+      }
+    }
+    this.el.replaceChildren(...parts);
+
+    // anchors are in the DOM now, so the first effect run can insert after them
+    for (const { fn, anchor } of dynamic) {
+      this.childEffectCleanups.push(this._innerResolveSignal(fn, anchor));
+    }
+
     this.childrenSet = newChildrenSet;
     return this as BaseNode;
   }
