@@ -1,0 +1,9 @@
+# Users for Basic auth (re-read on mtime change, no restart needed).
+# Plain text passwords, or sha256 hashes generated with:
+#   echo -n 'secret' | sha256sum
+users:
+  alice:
+    password: "alice"
+  bob:
+    # hash of "bob"
+    password: "sha256:81b637d8fcd2c6da6359e6963113a1170de795e4b725b84d1e0b4cfd9ec58ce9"

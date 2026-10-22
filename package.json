@@ -1,19 +1,17 @@
 {
-  "name": "solid-vanilla",
+  "name": "solid-vanilla-workspace",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "main": "src/index.ts",
+  "workspaces": [
+    "solid-vanilla-core",
+    "solid-vanilla-server",
+    "solid-vanilla-ui",
+    "solid-vanilla-starter"
+  ],
   "scripts": {
-    "test": "bun test",
-    "format": "bun x prettier -w *.json ./src",
-    "prebuild": "bun run format",
-    "build": "tsc"
-  },
-  "devDependencies": {
-    "@happy-dom/global-registrator": "^20.14.3",
-    "@types/bun": "^1.4.2",
-    "prettier": "^3.9.6",
-    "typescript": "7"
+    "build": "bun run --filter '*' build",
+    "test": "bun run --filter '*' test",
+    "format": "bun run --filter '*' format"
   }
 }

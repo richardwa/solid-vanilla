@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- three stacked panels; the middle one shifted sideways = components fitting together -->
+  <rect x="12" y="14" width="40" height="10" rx="3" fill="#9cf"/>
+  <rect x="20" y="27" width="40" height="10" rx="3" fill="#7db8f0"/>
+  <rect x="12" y="40" width="40" height="10" rx="3" fill="#6aabec"/>
+</svg>

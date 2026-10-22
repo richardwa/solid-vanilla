@@ -1,0 +1,21 @@
+/* Pico is imported in index.ts; this file customizes it.
+   Matches the styling used by deploy/my-sync-gmail pages. */
+
+body {
+  padding: 20px;
+}
+
+table tbody {
+  white-space: nowrap;
+}
+
+.nowrap-inline {
+  padding: 4px;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.header-rule {
+  border-bottom: 1px solid;
+  margin: 20px 0;
+}
