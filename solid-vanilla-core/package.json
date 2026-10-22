@@ -1,29 +1,30 @@
 {
   "name": "solid-vanilla",
   "version": "0.1.0",
-  "type": "module",
-  "main": "dist/solid-vanilla.js",
-  "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/solid-vanilla.js"
-    }
-  },
   "files": [
     "dist"
   ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
   "scripts": {
     "test": "bun test",
     "format": "bun x prettier -w *.json ./src",
     "prebuild": "bun run format",
-    "build": "vite build && tsc -p tsconfig.declarations.json"
+    "dev": "tsup --watch",
+    "build": "tsup"
   },
   "devDependencies": {
-    "@happy-dom/global-registrator": "^20.14.3",
     "@types/bun": "^1.4.2",
-    "vite": "^7.3.6",
     "prettier": "^3.9.6",
-    "typescript": "7"
+    "tsup": "^9.0.0",
+    "typescript": "^5.9.0"
   }
 }

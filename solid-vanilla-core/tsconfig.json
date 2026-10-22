@@ -1,16 +1,16 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "ESNext",
+    "target": "ES2022",
+    "module": "NodeNext", // Supports modern Node module resolution
     "moduleResolution": "bundler",
-    "esModuleInterop": true,
-    "allowJs": true,
-    "strict": true,
-    "noEmit": true,
-    "resolveJsonModule": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-    "types": ["bun"]
+    "declaration": true, // Generates .d.ts files
+    "declarationMap": true, // Map files back to source code for easy debugging
+    "sourceMap": true, // Generates source maps
+    "outDir": "./dist", // Output compilation folder
+    "rootDir": "./src", // Input source folder
+    "strict": true, // Enables strict type-checking
+    "esModuleInterop": true // Smooths interoperability with older modules
   },
-  "include": ["src"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "**/__tests__/*", "**/*.test.ts"]
 }
