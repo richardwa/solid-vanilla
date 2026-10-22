@@ -36,3 +36,31 @@ jobs:
             artifacts/ui.zip
             artifacts/server.zip
           if-no-files-found: error
+
+  # Release assets are publicly downloadable without a GitHub login
+  # (workflow artifacts are not). Re-runs overwrite the same rolling tag.
+  release:
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: solid-vanilla-${{ github.sha }}
+          path: artifacts
+
+      - name: Publish to rolling "latest" release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: latest
+          files: artifacts/*.zip
+          make_latest: true
+          body: |
+            Rolling build from main (${{ github.sha }}).
+            - `core.zip` — solid-vanilla-core (reactive framework)
+            - `ui.zip` — solid-vanilla-ui (depends on core)
+            - `server.zip` — solid-vanilla-server (Express helper)
