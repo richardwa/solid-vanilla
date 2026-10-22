@@ -1,0 +1,38 @@
+# Mirrors the custom build recipe (Containerfile.build + scripts/build-container.sh):
+# build the image, run it with OUTPUT mounted, then collect the three package
+# artifacts (core/, ui/, server/ + one zip each) as uploadable workflow artifacts.
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build container image
+        run: docker build -f Containerfile.build -t solidvanilla/solid-vanilla:${{ github.sha }} .
+
+      - name: Run build gate + emit artifacts
+        run: |
+          mkdir -p artifacts
+          docker run --rm \
+            -e OUTPUT=/output \
+            -v "$PWD/artifacts:/output" \
+            solidvanilla/solid-vanilla:${{ github.sha }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: solid-vanilla-${{ github.sha }}
+          path: |
+            artifacts/core.zip
+            artifacts/ui.zip
+            artifacts/server.zip
+          if-no-files-found: error
