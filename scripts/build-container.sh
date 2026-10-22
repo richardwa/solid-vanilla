@@ -8,6 +8,13 @@
 set -e
 : "${OUTPUT:?OUTPUT must be set to the artifact output dir}"
 
+# real install, run with the full tree present: bun creates per-package
+# node_modules (with the .bin links tsc/prettier need) only now. The deps
+# layer's premature install left empty node_modules dirs that make bun skip
+# linking, so remove them first (the cache stays warm, so this is fast)
+rm -rf node_modules solid-vanilla-*/node_modules
+bun install --frozen-lockfile
+
 # one gate for all packages: prettier + tsc typecheck (bun run build) and
 # bun test (core). Packages compile noEmit — sources are the artifacts.
 bun run build

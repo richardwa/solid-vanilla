@@ -1,0 +1,6 @@
+# keep the build context to committed sources: host node_modules/dist must
+# never reach the image (a leaked node_modules would mask a broken install)
+node_modules
+dist
+artifacts
+.git

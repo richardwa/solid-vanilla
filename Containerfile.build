@@ -23,9 +23,17 @@ RUN apk add --no-cache zip
 
 WORKDIR /src
 
-# install dependencies first so this layer caches across source changes
+# pre-install to warm bun's cache so this layer caches across source changes.
+# Note this CANNOT be the real install: with the package dirs still empty,
+# bun's per-package node_modules (where the .bin links live) are not created.
+# The build script therefore re-runs bun install with the full tree (fast,
+# everything comes from the cache).
 COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile
+COPY solid-vanilla-core/package.json solid-vanilla-core/
+COPY solid-vanilla-ui/package.json solid-vanilla-ui/
+COPY solid-vanilla-server/package.json solid-vanilla-server/
+COPY solid-vanilla-starter/package.json solid-vanilla-starter/
+RUN bun install --frozen-lockfile || true
 
 COPY . .
 CMD ["sh", "scripts/build-container.sh"]
