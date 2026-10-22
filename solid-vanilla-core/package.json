@@ -22,6 +22,7 @@
     "build": "tsup && tsc"
   },
   "devDependencies": {
+    "@happy-dom/global-registrator": "^21.0.4",
     "@types/bun": "^1.4.2",
     "prettier": "^3.9.6",
     "tsup": "^9.0.0",

@@ -1,0 +1,4 @@
+# Preload Happy-DOM so tests get a document/window/localStorage.
+# Named *.test.ts so it's counted as a test file as well.
+[test]
+preload = ["./src/setup.test.ts"]
