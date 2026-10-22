@@ -19,12 +19,12 @@
     "format": "bun x prettier -w *.json ./src",
     "prebuild": "bun run format",
     "dev": "tsup --watch",
-    "build": "tsup"
+    "build": "tsup && tsc"
   },
   "devDependencies": {
     "@types/bun": "^1.4.2",
     "prettier": "^3.9.6",
     "tsup": "^9.0.0",
-    "typescript": "^5.9.0"
+    "typescript": "^7.0.2"
   }
 }

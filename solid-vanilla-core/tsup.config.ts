@@ -3,7 +3,7 @@ import { defineConfig } from "tsup";
 export default defineConfig({
   entry: ["src/index.ts"],
   format: ["esm", "cjs"],
-  dts: true,
+  dts: false,
   clean: true,
   // 👈 Injects the correct value into the bundle depending on the script mode
   define: {

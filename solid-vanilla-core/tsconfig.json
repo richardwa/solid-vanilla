@@ -1,9 +1,10 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "NodeNext", // Supports modern Node module resolution
+    "module": "esnext", // Supports modern Node module resolution
     "moduleResolution": "bundler",
     "declaration": true, // Generates .d.ts files
+    "emitDeclarationOnly": true,
     "declarationMap": true, // Map files back to source code for easy debugging
     "sourceMap": true, // Generates source maps
     "outDir": "./dist", // Output compilation folder
