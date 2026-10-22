@@ -1,19 +1,29 @@
 {
   "name": "solid-vanilla-ui",
-  "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "files": [
+    "dist"
+  ],
   "type": "module",
-  "main": "src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
   "scripts": {
-    "dev": "vite",
     "format": "bun x prettier -w *.json ./src",
     "prebuild": "bun run format",
-    "build": "tsc"
+    "dev": "tsup --watch",
+    "build": "tsup && tsc"
   },
   "devDependencies": {
     "prettier": "^3.9.6",
-    "typescript": "7",
-    "vite": "^7.3.6"
+    "tsup": "^9.0.0",
+    "typescript": "7"
   },
   "dependencies": {
     "@picocss/pico": "^2.1.1",

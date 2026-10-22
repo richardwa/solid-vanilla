@@ -1,12 +1,24 @@
 {
   "name": "solid-vanilla-server",
   "version": "0.1.0",
+  "files": [
+    "dist"
+  ],
   "type": "module",
-  "main": "src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
   "scripts": {
     "format": "bun x prettier -w *.json ./src",
     "prebuild": "bun run format",
-    "build": "tsc"
+    "dev": "tsup --watch",
+    "build": "tsup && tsc"
   },
   "dependencies": {
     "express": "^5.2.1",
@@ -17,6 +29,7 @@
     "@types/express": "types/express",
     "@types/node": "^26.6.5",
     "prettier": "^3.9.6",
+    "tsup": "^9.0.0",
     "typescript": "7"
   }
 }
