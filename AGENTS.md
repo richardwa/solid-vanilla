@@ -32,6 +32,24 @@ A Bun workspace monorepo. Four packages live in subdirectories, each with its ow
 bun install                      # root install (updates root bun.lock)
 bun run build                    # typecheck/build all packages
 bun run test                     # run tests (core)
+
+## Container build
+
+A build-recipe image (pattern from git-viewer): build the image, then run it
+with `OUTPUT` mounted to collect artifacts. The run stage is the gate
+(`bun run build` + `bun run test`); the three outputs are the package
+sources (packages compile noEmit) plus a zip per package:
+
+```bash
+podman build -f Containerfile.build -t solidvanilla/solid-vanilla:<tag> .
+mkdir -p artifacts
+podman run --rm -e OUTPUT=/output -v "$PWD/artifacts:/output" \
+  solidvanilla/solid-vanilla:<tag>
+```
+
+Artifact shape under `$OUTPUT`: `core/` (framework), `ui/` (components,
+depends on `core/`), `server/` (Express helper), plus `core.zip`, `ui.zip`,
+`server.zip`. Steps live in `scripts/build-container.sh`.
 bun run --cwd solid-vanilla-starter dev    # vite dev server, port 5177
 bun run --cwd solid-vanilla-starter start  # serve dist + API, port 5177
 ```
