@@ -13,6 +13,7 @@
         "@types/bun": "^1.4.2",
         "prettier": "^3.9.6",
         "typescript": "7",
+        "vite": "^7.3.6",
       },
     },
     "solid-vanilla-server": {
