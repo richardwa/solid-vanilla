@@ -1,15 +1,15 @@
 # solid-vanilla
 
-A [Bun workspace](https://bun.sh/docs/install/workspaces) monorepo containing **solid-vanilla**, a tiny (~200 lines) SolidJS-like reactive UI framework that manipulates the DOM directly — no virtual DOM, no JSX, no build-time compiler — plus the packages built around it.
+A [Bun workspace](https://bun.sh/docs/install/workspaces) monorepo containing **solid-vanilla**, a tiny (~200 lines) SolidJS-like reactive UI framework that manipulates the DOM directly — no virtual DOM, no JSX, no build-time compiler — plus the packages built around it. This is a toy example of how to write a reactive SPA library, However i find it pretty elegant in its simplicity and i use it for my own projects.
 
 ## Packages
 
-| Package | Path | What it is |
-|---|---|---|
-| `solid-vanilla` | [`solid-vanilla-core`](./solid-vanilla-core) | The framework itself: function-based DOM nodes, signals/watch reactivity, router. Bun tests in `src/rnode` etc. |
-| `solid-vanilla-ui` | [`solid-vanilla-ui`](./solid-vanilla-ui) | Reusable UI components built on the framework (tables, inputs, auth, etc.) |
-| `solid-vanilla-server` | [`solid-vanilla-server`](./solid-vanilla-server) | Express-based server helper: typed API routes, YAML config, auth |
-| `solid-vanilla-starter` | [`solid-vanilla-starter`](./solid-vanilla-starter) | Starter app tying it all together: Vite client + Express API + typed client↔server bindings, Pico CSS |
+| Package                 | Path                                               | What it is                                                                                                      |
+| ----------------------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `solid-vanilla`         | [`solid-vanilla-core`](./solid-vanilla-core)       | The framework itself: function-based DOM nodes, signals/watch reactivity, router. Bun tests in `src/rnode` etc. |
+| `solid-vanilla-ui`      | [`solid-vanilla-ui`](./solid-vanilla-ui)           | Reusable UI components built on the framework (tables, inputs, auth, etc.)                                      |
+| `solid-vanilla-server`  | [`solid-vanilla-server`](./solid-vanilla-server)   | Express-based server helper: typed API routes, YAML config, auth                                                |
+| `solid-vanilla-starter` | [`solid-vanilla-starter`](./solid-vanilla-starter) | Starter app tying it all together: Vite client + Express API + typed client↔server bindings, Pico CSS           |
 
 ## Getting started
 
