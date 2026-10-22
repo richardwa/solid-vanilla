@@ -11,7 +11,8 @@
     "rootDir": "./src", // Input source folder
     "strict": true, // Enables strict type-checking
     "esModuleInterop": true, // Smooths interoperability with older modules
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    "types": ["node"] // server code runs on Node/Bun
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "**/__tests__/*", "**/*.test.ts"]
