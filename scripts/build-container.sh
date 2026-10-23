@@ -1,10 +1,12 @@
 #!/bin/sh
 # Build steps run inside the build container (see Containerfile.build).
 # Emits the three outputs to $OUTPUT:
-#   core/     solid-vanilla-core   — the reactive framework
-#   ui/       solid-vanilla-ui     — reusable components
-#   server/   solid-vanilla-server — Express-based API helper
-#   core.zip / ui.zip / server.zip — each folder as one downloadable file
+#   solid-vanilla-0.1.0.tgz       — solid-vanilla-core (the reactive framework)
+#   solid-vanilla-ui-0.1.0.tgz    — reusable components
+#   solid-vanilla-server-0.1.0.tgz — Express-based API helper
+#
+# Tarballs are produced by `bun pm pack`, so each is a publish-ready npm
+# package (package.json at the base, dist/ contents per the files field).
 set -e
 : "${OUTPUT:?OUTPUT must be set to the artifact output dir}"
 
@@ -15,22 +17,13 @@ set -e
 rm -rf node_modules solid-vanilla-*/node_modules
 bun install --frozen-lockfile
 
-# one gate for all packages: prettier + tsc typecheck (bun run build) and
-# bun test (core). Packages compile noEmit — sources are the artifacts.
+# one gate for all packages: tsup bundle + tsc typecheck (bun run build) and
+# bun test (core). The dist/ output is what bun pm pack ships below.
 bun run build
 bun run test
 
-copy_pkg() {
-  pkg=$1
-  dest=$2
-  mkdir -p "$OUTPUT/$dest"
-  cp -r "$pkg/src" "$OUTPUT/$dest/src"
-  cp "$pkg/package.json" "$pkg/tsconfig.json" "$OUTPUT/$dest/"
-  [ -f "$pkg/readme.md" ] && cp "$pkg/readme.md" "$OUTPUT/$dest/"
-  # zip the package contents so package.json sits at the base of the zip
-  (cd "$OUTPUT/$dest" && zip -qr "../$dest.zip" .)
-}
-
-copy_pkg solid-vanilla-core core
-copy_pkg solid-vanilla-ui ui
-copy_pkg solid-vanilla-server server
+# pack each package from its own dir so the tarball is the exact artifact
+# `bun publish` would ship (bun pm pack also resolves workspace:* deps)
+(cd solid-vanilla-core   && bun pm pack --destination "$OUTPUT")
+(cd solid-vanilla-ui     && bun pm pack --destination "$OUTPUT")
+(cd solid-vanilla-server && bun pm pack --destination "$OUTPUT")

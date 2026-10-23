@@ -2,24 +2,20 @@
 #   podman build -f Containerfile.build -t solidvanilla/solid-vanilla:<branch>-<hash> .
 #   podman run --rm -e OUTPUT=/output -v <rundir>:/output solidvanilla/solid-vanilla:...
 #
-# Artifact shape under $OUTPUT (three outputs, one per workspace package):
-#   core/     solid-vanilla-core   — the reactive framework (source, shipped as
-#                                    plain ESM TS; "main": "src/index.ts")
-#   ui/       solid-vanilla-ui     — reusable components on top of the framework
-#                                    (depends on core/ — install alongside it)
-#   server/   solid-vanilla-server — Express-based API helper (deps: express, yaml;
-#                                    run `bun install` inside to fetch them)
-#   core.zip / ui.zip / server.zip — each folder as one downloadable file
+# Artifact shape under $OUTPUT (one publish-ready tarball per workspace
+# package, produced by `bun pm pack`):
+#   solid-vanilla-0.1.0.tgz        — the reactive framework
+#   solid-vanilla-ui-0.1.0.tgz     — reusable components on top of the framework
+#                                    (depends on solid-vanilla)
+#   solid-vanilla-server-0.1.0.tgz — Express-based API helper (deps: express,
+#                                    yaml)
 #
 # The build stage is setup (deps + sources); the run stage is the gate:
-# `bun run build` (prettier + tsc typecheck for every package) and `bun run test`
-# (bun test, core). Packages compile noEmit — sources themselves are the
-# artifacts, so the script copies the package folders to $OUTPUT.
+# `bun run build` (tsup bundle + tsc typecheck for every package) and
+# `bun run test` (bun test, core). The script then packs each package's dist/
+# into its tarball, exactly what `bun publish` would ship.
 # The steps themselves live in scripts/build-container.sh.
 FROM docker.io/oven/bun:1-alpine
-
-# zip: bundle each artifact into a single downloadable file
-RUN apk add --no-cache zip
 
 WORKDIR /src
 
