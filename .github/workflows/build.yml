@@ -1,6 +1,6 @@
 # Mirrors the custom build recipe (Containerfile.build + scripts/build-container.sh):
-# build the image, run it with OUTPUT mounted, then collect the three package
-# artifacts (core/, ui/, server/ + one zip each) as uploadable workflow artifacts.
+# build the image, run it with OUTPUT mounted, then upload everything it emits
+# into $OUTPUT as workflow artifacts (and attach the tarballs to the release).
 name: build
 
 on:
@@ -31,10 +31,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: solid-vanilla-${{ github.sha }}
-          path: |
-            artifacts/core.zip
-            artifacts/ui.zip
-            artifacts/server.zip
+          path: artifacts/
           if-no-files-found: error
 
   # Release assets are publicly downloadable without a GitHub login
@@ -57,10 +54,11 @@ jobs:
         with:
           tag_name: latest
           name: latest
-          files: artifacts/*.zip
+          files: artifacts/*.tgz
           make_latest: true
           body: |
             Rolling build from main (${{ github.sha }}).
-            - `core.zip` — solid-vanilla-core (reactive framework)
-            - `ui.zip` — solid-vanilla-ui (depends on core)
-            - `server.zip` — solid-vanilla-server (Express helper)
+            Publish-ready npm tarballs (`bun pm pack`) for:
+            - solid-vanilla (reactive framework)
+            - solid-vanilla-ui (depends on core)
+            - solid-vanilla-server (Express helper)
