@@ -69,7 +69,7 @@ export class RNode implements BaseNode {
     return id;
   }
 
-  memo(key: string | number, fn: () => BaseNode | string) {
+  memo<T extends BaseNode | string>(key: string | number, fn: () => T) {
     return applyMemo(this, key, fn);
   }
 

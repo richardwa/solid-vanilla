@@ -5,16 +5,16 @@ import type { BaseNode, ChildNode, RNodeInternals } from "./types";
 // Memoizes a child on this node, keyed by `key`. When the same key is
 // requested again the cached node is reused instead of rebuilt. The cache
 // entry self-deletes when the node is unmounted.
-export function applyMemo(
+export function applyMemo<T extends BaseNode | string>(
   node: RNodeInternals,
   key: string | number,
-  fn: () => BaseNode | string,
-): BaseNode | string {
+  fn: () => T,
+): T {
   const localMemoMap = node.memoMap ?? new Map<string | number, ChildNode>();
   if (node.memoMap === undefined) {
     node.memoMap = localMemoMap;
   }
-  const val = localMemoMap.get(key);
+  const val = localMemoMap.get(key) as T | undefined;
   if (val) {
     debug("RNode", "cache hit", key);
     return val;
