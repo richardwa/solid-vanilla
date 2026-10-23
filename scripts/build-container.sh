@@ -27,7 +27,8 @@ copy_pkg() {
   cp -r "$pkg/src" "$OUTPUT/$dest/src"
   cp "$pkg/package.json" "$pkg/tsconfig.json" "$OUTPUT/$dest/"
   [ -f "$pkg/readme.md" ] && cp "$pkg/readme.md" "$OUTPUT/$dest/"
-  (cd "$OUTPUT" && zip -qr "$dest.zip" "$dest")
+  # zip the package contents so package.json sits at the base of the zip
+  (cd "$OUTPUT/$dest" && zip -qr "../$dest.zip" .)
 }
 
 copy_pkg solid-vanilla-core core
