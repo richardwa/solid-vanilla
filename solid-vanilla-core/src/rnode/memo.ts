@@ -9,7 +9,7 @@ export function applyMemo(
   node: RNodeInternals,
   key: string | number,
   fn: () => BaseNode | string,
-): ChildNode {
+): BaseNode | string {
   const localMemoMap = node.memoMap ?? new Map<string | number, ChildNode>();
   if (node.memoMap === undefined) {
     node.memoMap = localMemoMap;
