@@ -49,6 +49,15 @@ jobs:
           name: solid-vanilla-${{ github.sha }}
           path: artifacts
 
+      - name: Delete previous "latest" release
+        # action-gh-release only updates an existing release in place: old
+        # assets are kept and body/title may not be rewritten. Delete the
+        # old release + tag so a fresh one is created each run.
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release delete latest --yes --cleanup-tag || true
+
       - name: Publish to rolling "latest" release
         uses: softprops/action-gh-release@v2
         with:
