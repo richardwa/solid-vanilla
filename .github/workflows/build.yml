@@ -45,6 +45,10 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Compute short commit hash
+        id: shortsha
+        run: echo "sha=${GITHUB_SHA::6}" >> "$GITHUB_OUTPUT"
+
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -57,8 +61,8 @@ jobs:
         # a previous one.
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: build-${{ github.sha }}
-          name: build-${{ github.sha }}
+          tag_name: build-${{ steps.shortsha.outputs.sha }}
+          name: build-${{ steps.shortsha.outputs.sha }}
           files: artifacts/*.tgz
           make_latest: false
           body: |
@@ -87,7 +91,7 @@ jobs:
           make_latest: true
           body: |
             Rolling build from main (${{ github.sha }}).
-            Fixed per-commit release: [`build-${{ github.sha }}`](https://github.com/${{ github.repository }}/releases/tag/build-${{ github.sha }})
+            Fixed per-commit release: [`build-${{ steps.shortsha.outputs.sha }}`](https://github.com/${{ github.repository }}/releases/tag/build-${{ steps.shortsha.outputs.sha }})
             Publish-ready npm tarballs (`bun pm pack`) for:
             - solid-vanilla (reactive framework)
             - solid-vanilla-ui (depends on core)
