@@ -1,4 +1,5 @@
 import { execFile } from "node:child_process";
+import http from "node:http";
 import { promisify } from "node:util";
 
 // Basic auth backed by Linux system users (PAM accounts). Credentials are
@@ -6,15 +7,19 @@ import { promisify } from "node:util";
 // localStorage and sends an Authorization: Basic header on every API call.
 // The server stays stateless — no sessions, no cookies.
 //
+// Password verification is delegated to the local password-validator service
+// (an HTTP server on a unix socket) so this process never needs to run `su`
+// itself. The service checks the password the same way a real login does and
+// applies its own users.conf allowlist and rate limiting.
+//
 // A login/password pair is accepted when:
-//   1. the login exists on the system (`getent passwd <login>`), and
-//   2. the password verifies against the account — checked by running
-//      `su -c true <login>` inside a pseudo-tty (via `script`) with the
-//      password piped to it, i.e. the same code path a real login uses.
+//   1. it passes the local checks here (optional AUTH_GROUP membership), and
+//   2. the validator service on AUTH_VALIDATOR_SOCKET (default
+//      /home/my-auth-store/validator.sock) reports { "valid": true }.
 //
 // Notes:
-//   - The server process must run as a NON-ROOT user. As root, `su` accepts
-//     any password, which would disable the password check entirely.
+//   - The socket must be reachable by this process' user (world-accessible
+//     mode 0666, or shared via SOCKET_GROUP when starting the validator).
 //   - Optional: set AUTH_GROUP to restrict logins to members of that system
 //     group (e.g. AUTH_GROUP=app-users).
 //   - Keeping login/password pairs in the Authorization header is safe over
@@ -48,18 +53,43 @@ const inGroup = async (login: string, group: string): Promise<boolean> => {
   }
 };
 
-/** Verify a password against the system account by logging in via pty. */
-const suLogin = (login: string, password: string): Promise<boolean> =>
+/** Unix socket of the password-validator service (see my-auth-store). */
+const VALIDATOR_SOCKET =
+  process.env.AUTH_VALIDATOR_SOCKET ?? "/home/my-auth-store/validator.sock";
+
+/** Ask the validator service over its unix socket; false on any failure. */
+const validatorCheck = (login: string, password: string): Promise<boolean> =>
   new Promise((resolve) => {
-    const child = execFile(
-      "script",
-      ["-qec", `su -s /bin/sh -c true -- ${login}`, "/dev/null"],
-      { timeout: 10_000 },
-      (error) => resolve(!error),
+    const body = JSON.stringify({ username: login, password });
+    const req = http.request(
+      {
+        socketPath: VALIDATOR_SOCKET,
+        path: "/validate",
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "content-length": Buffer.byteLength(body),
+        },
+        timeout: 10_000,
+      },
+      (res) => {
+        const chunks: Buffer[] = [];
+        res.on("data", (chunk: Buffer) => chunks.push(chunk));
+        res.on("end", () => {
+          try {
+            const parsed = JSON.parse(Buffer.concat(chunks).toString()) as {
+              valid?: boolean;
+            };
+            resolve(res.statusCode === 200 && parsed.valid === true);
+          } catch {
+            resolve(false);
+          }
+        });
+      },
     );
-    // `su` reads the password from the pty that `script` allocates; one
-    // correct line satisfies it, a wrong one fails after retries.
-    child.stdin?.end(`${password}\n`);
+    req.on("timeout", () => req.destroy());
+    req.on("error", () => resolve(false));
+    req.end(body);
   });
 
 /** Validate a login/password pair against Linux system users. */
@@ -68,10 +98,9 @@ export const checkCredentials = async (
   password: string,
 ): Promise<boolean> => {
   if (!password) return false;
-  if (!(await userExists(login))) return false;
   const group = process.env.AUTH_GROUP;
   if (group && !(await inGroup(login, group))) return false;
-  return suLogin(login, password);
+  return validatorCheck(login, password);
 };
 
 /** Parse an Authorization: Basic header into { login, password }, or null. */
