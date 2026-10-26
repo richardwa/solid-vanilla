@@ -1,14 +1,13 @@
 import { h, hbox, signal, vbox } from "solid-vanilla";
 import { Button, ClickLink, Panel } from "./components";
 import { PasswordInput, TextInput } from "./inputs";
+import { apiPath } from "./auth";
 
 // Session-auth client helpers: the server sets an HttpOnly session cookie
 // at POST {apiPath}/login (see solid-vanilla-server's auth: "session" mode)
 // and the browser sends it automatically on every API call, so no
 // credentials are stored client-side. The signed-in user is fetched once
 // from GET {apiPath}/me and exposed as a signal.
-
-export const apiPath = "/api";
 
 /** Signed-in user name ("" until loadUser resolves, and when anonymous). */
 export const sessionUser = signal<string>("");
