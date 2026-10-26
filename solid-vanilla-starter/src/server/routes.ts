@@ -9,6 +9,6 @@ export const configureRoutes = (app: Server) => {
     gitLogs: getGitLog,
   };
   // logger, /api/login, basic-auth middleware and the JSON dispatch come
-  // from solid-vanilla-server; credentials come from users.yaml
+  // from solid-vanilla-server; credentials come from Linux system users
   configureApi(app, { serverImpl });
 };

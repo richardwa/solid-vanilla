@@ -21,8 +21,7 @@
     "build": "tsup && tsc"
   },
   "dependencies": {
-    "express": "^5.2.1",
-    "yaml": "^2.9.1"
+    "express": "^5.2.1"
   },
   "devDependencies": {
     "@types/bun": "^1.4.2",

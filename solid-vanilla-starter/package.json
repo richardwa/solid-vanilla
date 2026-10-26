@@ -21,7 +21,6 @@
     "@picocss/pico": "^2.1.1",
     "solid-vanilla": "workspace:*",
     "solid-vanilla-server": "workspace:*",
-    "solid-vanilla-ui": "workspace:*",
-    "yaml": "^2.9.1"
+    "solid-vanilla-ui": "workspace:*"
   }
 }

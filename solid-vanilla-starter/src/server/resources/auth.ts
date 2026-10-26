@@ -1,84 +1,87 @@
-import type { NextFunction, Request, Response } from "express";
-import crypto from "node:crypto";
-import fs from "node:fs/promises";
-import path from "node:path";
-import { parse } from "yaml";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 
-// Basic auth. Every /api call carries an Authorization: Basic header; the
-// client keeps the credentials in localStorage after /api/login (see
-// solid-vanilla-ui's auth module). No sessions, no cookies.
+// Basic auth backed by Linux system users (PAM accounts). Credentials are
+// validated once via POST {apiPath}/login; the client keeps them in
+// localStorage and sends an Authorization: Basic header on every API call.
+// The server stays stateless — no sessions, no cookies.
 //
-// Users come from users.yaml (re-read when its mtime changes — edits apply
-// without a restart):
+// A login/password pair is accepted when:
+//   1. the login exists on the system (`getent passwd <login>`), and
+//   2. the password verifies against the account — checked by running
+//      `su -c true <login>` inside a pseudo-tty (via `script`) with the
+//      password piped to it, i.e. the same code path a real login uses.
 //
-//   users:
-//     alice:
-//       password: "alice"                # plain text, or "sha256:<hex>"
-//       # echo -n 'secret' | sha256sum   # for the hash (-n: no trailing \n)
+// Notes:
+//   - The server process must run as a NON-ROOT user. As root, `su` accepts
+//     any password, which would disable the password check entirely.
+//   - Optional: set AUTH_GROUP to restrict logins to members of that system
+//     group (e.g. AUTH_GROUP=app-users).
+//   - Keeping login/password pairs in the Authorization header is safe over
+//     HTTPS; never run API auth over plain HTTP in production.
 
-type UserConfig = { password?: string };
-type UsersConfig = { users?: Record<string, UserConfig> };
+export const apiPath = "/api";
 
-export const usersFile = (): string =>
-  process.env.USERS_FILE
-    ? path.resolve(process.env.USERS_FILE)
-    : path.join(process.cwd(), "users.yaml");
+const execFileP = promisify(execFile);
 
-let cache: { mtimeMs: number; config: UsersConfig } | null = null;
-
-const loadUsers = async (): Promise<UsersConfig> => {
+/** Does a Linux account with this name exist? */
+export const userExists = async (login: string): Promise<boolean> => {
+  if (!/^[a-z_][a-z0-9_-]*\$?$/i.test(login)) return false;
   try {
-    const stat = await fs.stat(usersFile());
-    if (cache?.mtimeMs === stat.mtimeMs) return cache.config;
-    const text = await fs.readFile(usersFile(), "utf8");
-    const config = (parse(text) ?? {}) as UsersConfig;
-    cache = { mtimeMs: stat.mtimeMs, config };
-    return config;
-  } catch (error) {
-    console.error(`[auth] cannot read ${usersFile()}: ${error}`);
-    return {};
+    await execFileP("getent", ["passwd", login]);
+    return true;
+  } catch {
+    return false;
   }
 };
 
-const digest = (value: string): Buffer =>
-  crypto.createHash("sha256").update(value).digest();
-
-const passwordMatches = (
-  stored: string | undefined,
-  given: string,
-): boolean => {
-  if (!stored) return false;
-  const expected = stored.startsWith("sha256:")
-    ? Buffer.from(stored.slice(7), "hex")
-    : digest(stored);
-  if (expected.length !== 32) return false;
-  return crypto.timingSafeEqual(expected, digest(given));
+/** Is the login a member (primary or supplementary) of the named group? */
+const inGroup = async (login: string, group: string): Promise<boolean> => {
+  try {
+    const { stdout } = await execFileP("getent", ["group", group]);
+    if (stdout.trimEnd().split(":").slice(3, 4)[0]?.split(",").includes(login))
+      return true;
+    const { stdout: idOut } = await execFileP("id", ["-Gn", login]);
+    return idOut.trim().split(/\s+/).includes(group);
+  } catch {
+    return false;
+  }
 };
 
-/** Validate a login/password pair against users.yaml. */
+/** Verify a password against the system account by logging in via pty. */
+const suLogin = (login: string, password: string): Promise<boolean> =>
+  new Promise((resolve) => {
+    const child = execFile(
+      "script",
+      ["-qec", `su -s /bin/sh -c true -- ${login}`, "/dev/null"],
+      { timeout: 10_000 },
+      (error) => resolve(!error),
+    );
+    // `su` reads the password from the pty that `script` allocates; one
+    // correct line satisfies it, a wrong one fails after retries.
+    child.stdin?.end(`${password}\n`);
+  });
+
+/** Validate a login/password pair against Linux system users. */
 export const checkCredentials = async (
   login: string,
   password: string,
 ): Promise<boolean> => {
-  const { users } = await loadUsers();
-  const cfg = users?.[login];
-  return !!cfg && passwordMatches(cfg.password, password);
+  if (!password) return false;
+  if (!(await userExists(login))) return false;
+  const group = process.env.AUTH_GROUP;
+  if (group && !(await inGroup(login, group))) return false;
+  return suLogin(login, password);
 };
 
-const unauthorized = (res: Response) => {
-  res.status(401).json({ error: "not authenticated" });
-};
-
-/** Express middleware: validate the Basic auth header. */
-export const basicAuth = (req: Request, res: Response, next: NextFunction) => {
-  const m = /^Basic (.+)$/i.exec(req.headers.authorization ?? "");
-  if (!m) return unauthorized(res);
+/** Parse an Authorization: Basic header into { login, password }, or null. */
+export const parseBasicHeader = (
+  header: string | undefined,
+): { login: string; password: string } | null => {
+  const m = /^Basic (.+)$/i.exec(header ?? "");
+  if (!m) return null;
   const decoded = Buffer.from(m[1], "base64").toString("utf8");
   const sep = decoded.indexOf(":");
-  if (sep < 0) return unauthorized(res);
-  void (async () => {
-    if (await checkCredentials(decoded.slice(0, sep), decoded.slice(sep + 1)))
-      next();
-    else unauthorized(res);
-  })();
+  if (sep < 0) return null;
+  return { login: decoded.slice(0, sep), password: decoded.slice(sep + 1) };
 };

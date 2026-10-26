@@ -12,7 +12,7 @@ export type ApiConfig = {
   /** The app's API implementation; each method becomes POST {apiPath}/key. */
   serverImpl: Record<string, (...args: never[]) => Promise<unknown>>;
   /** Credential check used by /api/login and the auth middleware; defaults
-   *  to users.yaml-based checkCredentials (see auth.ts). */
+   *  to Linux system-user checkCredentials (see auth.ts). */
   checkCredentials?: (login: string, password: string) => Promise<boolean>;
   /** serverImpl keys served WITHOUT requiring authentication; the handler's
    *  first argument is the authenticated login name ("" when anonymous),
