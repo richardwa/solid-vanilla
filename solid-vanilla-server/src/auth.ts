@@ -64,7 +64,24 @@ const suLogin = (login: string, password: string): Promise<boolean> =>
     );
     // `su` reads the password from the pty that `script` allocates; one
     // correct line satisfies it, a wrong one fails after retries.
-    child.stdin?.end(`${password}\n`);
+    // `script` forwards its stdin to the pty as soon as it arrives, but `su`
+    // only starts reading after printing its "Password:" prompt — write too
+    // early and the password is dropped before su can consume it. So wait
+    // for the prompt (with a timer backstop in case it's localized/masked)
+    // before sending the password line.
+    const send = () => child.stdin?.end(`${password}\n`);
+    let sent = false;
+    const once = () => {
+      if (!sent) {
+        sent = true;
+        send();
+      }
+    };
+    child.stdout?.on("data", (chunk: Buffer) => {
+      if (/password/i.test(chunk.toString())) once();
+    });
+    const backstop = setTimeout(once, 1000);
+    child.on("close", () => clearTimeout(backstop));
   });
 
 /** Validate a login/password pair against Linux system users. */
