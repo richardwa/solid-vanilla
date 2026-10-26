@@ -1,5 +1,6 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { allowedUser } from "./allowed-users.ts";
 
 // Basic auth backed by Linux system users (PAM accounts). Credentials are
 // validated once via POST {apiPath}/login; the client keeps them in
@@ -16,7 +17,11 @@ import { promisify } from "node:util";
 //   - The server process must run as a NON-ROOT user. As root, `su` accepts
 //     any password, which would disable the password check entirely.
 //   - Optional: set AUTH_GROUP to restrict logins to members of that system
-//     group (e.g. AUTH_GROUP=app-users).
+//     group (e.g. AUTH_GROUP=app-users), or AUTH_USERS / AUTH_USERS_FILE to
+//     restrict logins to an explicit list of acceptable usernames (see
+//     allowed-users.ts).
+//   - For cookie-session auth instead of client-stored Basic credentials,
+//     see sessions.ts and configureApi's auth: "session" mode.
 //   - Keeping login/password pairs in the Authorization header is safe over
 //     HTTPS; never run API auth over plain HTTP in production.
 
@@ -68,6 +73,7 @@ export const checkCredentials = async (
   password: string,
 ): Promise<boolean> => {
   if (!password) return false;
+  if (!(await allowedUser(login))) return false;
   if (!(await userExists(login))) return false;
   const group = process.env.AUTH_GROUP;
   if (group && !(await inGroup(login, group))) return false;

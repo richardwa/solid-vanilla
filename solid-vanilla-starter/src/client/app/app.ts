@@ -1,11 +1,12 @@
-import { h, hbox } from "solid-vanilla";
+import { fragment, h, hbox } from "solid-vanilla";
 import logoUrl from "../logo.svg";
 import {
-  LoginPanel,
+  LoginPage,
   Page,
   PageHeader,
-  UserBox,
-  userName,
+  SessionUserBox,
+  loadSessionUser,
+  sessionUser,
 } from "solid-vanilla-ui";
 import { router } from "./routes";
 
@@ -22,15 +23,23 @@ export const Logo = () =>
         .attr("height", "24"),
     );
 
-// Login page when anonymous, app content otherwise (checked on load; login
-// and logout both reload the page, so no reactive transition is needed).
-export const App = () =>
-  userName.get()
-    ? Page().inner(
-        PageHeader(
-          hbox().css("gap", "0.5rem").inner(Logo(), "Solid Vanilla"),
-          UserBox(),
-        ),
-        router.getRoot(),
-      )
-    : LoginPanel();
+// Separate login page when anonymous, app content otherwise. The session
+// user is fetched from GET /api/me (HttpOnly cookie, nothing stored
+// client-side); login and logout both reload the page, so no reactive
+// transition is needed beyond the sessionUser watch.
+export const App = () => {
+  void loadSessionUser();
+  return fragment().watch(sessionUser, (node) =>
+    node.inner(
+      sessionUser.get()
+        ? Page().inner(
+            PageHeader(
+              hbox().css("gap", "0.5rem").inner(Logo(), "Solid Vanilla"),
+              SessionUserBox(),
+            ),
+            router.getRoot(),
+          )
+        : LoginPage(),
+    ),
+  );
+};

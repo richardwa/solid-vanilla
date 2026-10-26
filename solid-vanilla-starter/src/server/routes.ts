@@ -8,7 +8,11 @@ export const configureRoutes = (app: Server) => {
     gitBranches: getBranches,
     gitLogs: getGitLog,
   };
-  // logger, /api/login, basic-auth middleware and the JSON dispatch come
-  // from solid-vanilla-server; credentials come from Linux system users
-  configureApi(app, { serverImpl });
+  // logger, /api/login + /api/logout + /api/me, the session middleware and
+  // the JSON dispatch come from solid-vanilla-server; credentials come from
+  // Linux system users (passwords verified via PAM, restricted to the
+  // AUTH_USERS / AUTH_USERS_FILE username allowlist when set). Session
+  // auth: the server issues an HttpOnly cookie, nothing is stored
+  // client-side.
+  configureApi(app, { serverImpl, auth: "session" });
 };
