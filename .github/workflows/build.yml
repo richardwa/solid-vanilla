@@ -35,7 +35,9 @@ jobs:
           if-no-files-found: error
 
   # Release assets are publicly downloadable without a GitHub login
-  # (workflow artifacts are not). Re-runs overwrite the same rolling tag.
+  # (workflow artifacts are not). Two releases are maintained:
+  #   - build-<sha>: immutable, one per commit (fixed name based on hash)
+  #   - latest:      rolling pointer to the newest main build
   release:
     needs: build
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
@@ -49,6 +51,24 @@ jobs:
           name: solid-vanilla-${{ github.sha }}
           path: artifacts
 
+      - name: Publish fixed release for this commit
+        # Immutable per-commit release: tag and name are derived from the
+        # commit hash, so each run gets its own release and never overwrites
+        # a previous one.
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.sha }}
+          name: build-${{ github.sha }}
+          files: artifacts/*.tgz
+          make_latest: false
+          body: |
+            Build of commit ${{ github.sha }}
+            (https://github.com/${{ github.repository }}/commit/${{ github.sha }}).
+            Publish-ready npm tarballs (`bun pm pack`) for:
+            - solid-vanilla (reactive framework)
+            - solid-vanilla-ui (depends on core)
+            - solid-vanilla-server (Express helper)
+
       - name: Delete previous "latest" release
         # action-gh-release only updates an existing release in place: old
         # assets are kept and body/title may not be rewritten. Delete the
@@ -58,7 +78,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: gh release delete latest --yes --cleanup-tag || true
 
-      - name: Publish to rolling "latest" release
+      - name: Publish rolling "latest" pointer
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
@@ -67,6 +87,7 @@ jobs:
           make_latest: true
           body: |
             Rolling build from main (${{ github.sha }}).
+            Fixed per-commit release: [`build-${{ github.sha }}`](https://github.com/${{ github.repository }}/releases/tag/build-${{ github.sha }})
             Publish-ready npm tarballs (`bun pm pack`) for:
             - solid-vanilla (reactive framework)
             - solid-vanilla-ui (depends on core)
