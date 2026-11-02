@@ -9,10 +9,14 @@ export const configureRoutes = (app: Server) => {
     gitLogs: getGitLog,
   };
   // logger, /api/login + /api/logout + /api/me, the session middleware and
-  // the JSON dispatch come from solid-vanilla-server; credentials come from
-  // Linux system users (passwords verified via PAM, restricted to the
-  // AUTH_USERS / AUTH_USERS_FILE username allowlist when set). Session
-  // auth: the server issues an HttpOnly cookie, nothing is stored
-  // client-side.
-  configureApi(app, { serverImpl, auth: "session" });
+  // the JSON dispatch come from solid-vanilla-server. This starter accepts
+  // any login/password: checkCredentials just returns true (the default
+  // would verify Linux system users via PAM; see solid-vanilla-server
+  // auth.ts). Session auth: the server issues an HttpOnly cookie, nothing
+  // is stored client-side.
+  configureApi(app, {
+    serverImpl,
+    auth: "session",
+    checkCredentials: async () => true,
+  });
 };
