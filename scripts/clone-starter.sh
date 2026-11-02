@@ -46,20 +46,14 @@ rsync -av \
 grep -rl "solid-vanilla-starter" "$target" --include='*.md' --include='*.json' |
   xargs -r sed -i "s/solid-vanilla-starter/$name/g"
 
-base="https://github.com/richardwa/solid-vanilla/releases/download/latest"
-sed -i \
-  "s|\"solid-vanilla\": \"workspace:\*\"|\"solid-vanilla\": \"$base/solid-vanilla-0.1.0.tgz\"|" \
-  "$target/package.json"
-sed -i \
-  "s|\"solid-vanilla-ui\": \"workspace:\*\"|\"solid-vanilla-ui\": \"$base/solid-vanilla-ui-0.1.0.tgz\"|" \
-  "$target/package.json"
-sed -i \
-  "s|\"solid-vanilla-server\": \"workspace:\*\"|\"solid-vanilla-server\": \"$base/solid-vanilla-server-0.1.0.tgz\"|" \
-  "$target/package.json"
+# Remove the workspace:* dependency lines, then re-add the framework
+# packages from the GitHub release tarballs (bun add saves them).
+sed -i '/"solid-vanilla\(-ui\|-server\)\?": "workspace:\*"/d' "$target/package.json"
 
-# overrides: the ui/server tarballs depend on "solid-vanilla": "0.1.0",
-# which bun would look up on the npm registry (404); point it at the same
+# The ui/server tarballs pin "solid-vanilla": "0.1.0", which bun would
+# look up on the npm registry (404); overrides point it at the same
 # release tarball instead (git-viewer's package.json does the same).
+base="https://github.com/richardwa/solid-vanilla/releases/download/latest"
 sed -i -e 's/^  }$/  },/' -e '$i\
   "overrides": {\
     "solid-vanilla": "'"$base"'/solid-vanilla-0.1.0.tgz",\
@@ -67,8 +61,16 @@ sed -i -e 's/^  }$/  },/' -e '$i\
     "solid-vanilla-server": "'"$base"'/solid-vanilla-server-0.1.0.tgz"\
   }' "$target/package.json"
 
+# --- install -------------------------------------------------------------
+cd "$target"
+bun install
+bun add \
+  "https://github.com/richardwa/solid-vanilla/releases/download/latest/solid-vanilla-0.1.0.tgz" \
+  "https://github.com/richardwa/solid-vanilla/releases/download/latest/solid-vanilla-ui-0.1.0.tgz" \
+  "https://github.com/richardwa/solid-vanilla/releases/download/latest/solid-vanilla-server-0.1.0.tgz"
+
 # --- ignore build output and installed packages -------------------------
-cat >"$target/.gitignore" <<'EOF'
+cat >.gitignore <<'EOF'
 node_modules
 dist
 EOF
