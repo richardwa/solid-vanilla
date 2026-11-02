@@ -3,3 +3,4 @@ export * from "./inputs";
 export * from "./table";
 export * from "./auth";
 export * from "./session";
+export * from "./tabs";
