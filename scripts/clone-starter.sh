@@ -3,23 +3,27 @@
 # solid-vanilla-starter template.
 #
 # Usage:
-#   scripts/clone-starter.sh <project-name>
+#   scripts/clone-starter.sh <project-name> [release-tag]
 #
 # Creates ./<project-name> containing ONLY the starter app (no monorepo).
 # The framework packages (solid-vanilla, solid-vanilla-ui, solid-vanilla-server)
-# are pulled in as a git submodule of the solid-vanilla repo, pinned to the
-# current main; the app's package.json references them via file: paths.
-# "can point to latest": cd into the submodule and run
-#   git submodule update --remote
-# to move it to the newest main, then bun install.
+# are referenced as GitHub release tarballs, like git-viewer's package.json.
+#
+# [release-tag] selects which GitHub release to pin (default: "latest", the
+# moving release that always points at the newest build). Use a per-commit
+# tag (build-<sha>) to pin an exact version.
 set -euo pipefail
 
-if [ $# -ne 1 ]; then
-  echo "usage: $0 <project-name>" >&2
+REPO_OWNER=richardwa
+REPO_NAME=solid-vanilla
+
+if [ $# -lt 1 ]; then
+  echo "usage: $0 <project-name> [release-tag]" >&2
   exit 1
 fi
 
 name="$1"
+tag="${2:-latest}"
 if ! [[ "$name" =~ ^[a-z0-9][a-z0-9_-]*$ ]]; then
   echo "error: project name must be lowercase letters/digits/-/_ (got '$name')" >&2
   exit 1
@@ -32,64 +36,36 @@ if [ -e "$target" ]; then
 fi
 
 repo="$(cd "$(dirname "$0")/.." && pwd)"
-remote="$(git -C "$repo" config --get remote.origin.url 2>/dev/null || true)"
 
-mkdir -p "$target"
+# Package version carried in the release asset names (single source: the
+# packages' package.json version).
+version="$(python3 -c "import json;print(json.load(open('$repo/solid-vanilla-core/package.json'))['version'])")"
+base="https://github.com/$REPO_OWNER/$REPO_NAME/releases/download/$tag"
 
 # --- app files: the starter package only -------------------------------
 src="$repo/solid-vanilla-starter"
+mkdir -p "$target"
 for f in src vite.config.ts tsconfig.json package.json AGENTS.md readme.md; do
   [ -e "$src/$f" ] && cp -r "$src/$f" "$target/"
 done
 rm -rf "$target/dist" "$target/node_modules"
+sed -i "s/solid-vanilla-starter/$name/g" "$target/package.json" "$target/AGENTS.md"
 
-# Rename the app package and its self-references.
-sed -i "s/solid-vanilla-starter/$name/g" \
-  "$target/package.json" "$target/AGENTS.md"
-
-# --- framework packages as a submodule ---------------------------------
-sub="solid-vanilla"
-if [ -n "$remote" ]; then
-  echo "adding submodule $remote (branch main) ..."
-  git -C "$target" init -q
-  git -C "$target" submodule add -q -b main "$remote" "$sub"
-  git -C "$target" -c protocol.file.allow=always submodule update --init --recursive -q 2>/dev/null || true
-  # The submodule is a bun workspace; replace its workspace root manifest
-  # with a minimal one so bun treats the inner packages as plain file:
-  # deps, and rewrite the framework's own workspace:* cross-deps to file:
-  # refs. The template's starter copy is redundant in a clone and its
-  # workspace:* deps would break the standalone install.
-  rm -rf "$target/$sub/solid-vanilla-starter"
-  echo '{"name":"solid-vanilla-framework","private":true,"version":"0.0.0","type":"module"}' \
-    > "$target/$sub/package.json"
-  sed -i 's|"solid-vanilla": "workspace:\*"|"solid-vanilla": "file:../solid-vanilla-core"|g' \
-    "$target/$sub/solid-vanilla-ui/package.json" \
-    "$target/$sub/solid-vanilla-server/package.json"
-  # Build the framework packages so their dist/ outputs (types + bundles)
-  # exist; dist/ is gitignored, so a fresh submodule checkout lacks them.
-  (cd "$target/$sub/solid-vanilla-core" && bun install >/dev/null 2>&1 && bun run build >/dev/null)
-  (cd "$target/$sub/solid-vanilla-ui" && bun install >/dev/null 2>&1 && bun run build >/dev/null)
-  (cd "$target/$sub/solid-vanilla-server" && bun install >/dev/null 2>&1 && bun run build >/dev/null)
-else
-  # No remote configured: copy the framework packages locally instead.
-  echo "no git remote; copying framework packages locally ..."
-  for p in solid-vanilla solid-vanilla-ui solid-vanilla-server; do
-    cp -r "$repo/$p" "$target/$p"
-    rm -rf "$target/$p/node_modules" "$target/$p/dist"
-  done
-  rm -f "$target/bun.lock"
-fi
-
-# --- dependencies: file: paths into the submodule -----------------------
-python3 - "$target/package.json" <<'EOF'
+# --- dependencies: GitHub release tarballs (git-viewer style) -----------
+python3 - "$target/package.json" "$version" "$base" <<'EOF'
 import json, sys
-path = sys.argv[1]
+path, version, base = sys.argv[1], sys.argv[2], sys.argv[3]
+urls = {name: f"{base}/{name}-{version}.tgz" for name in
+        ("solid-vanilla", "solid-vanilla-ui", "solid-vanilla-server")}
 pkg = json.load(open(path))
-deps = pkg["dependencies"]
-for name in ("solid-vanilla", "solid-vanilla-ui", "solid-vanilla-server"):
-    deps[name] = f"file:./solid-vanilla/{name if name != "solid-vanilla" else "solid-vanilla-core"}"
-json.dump(pkg, open(path, "w"), indent=2)
-open(path, "a").write("\n")
+pkg["dependencies"].update(urls)
+# overrides keep transitive resolution (ui/server's pinned
+# "solid-vanilla": "0.1.0") on the release tarball instead of the npm
+# registry, mirroring git-viewer's package.json.
+pkg["overrides"] = urls
+with open(path, "w") as f:
+    json.dump(pkg, f, indent=2)
+    f.write("\n")
 EOF
 
 # --- install + first build ----------------------------------------------
@@ -98,10 +74,11 @@ bun install
 bun run build
 
 # --- git snapshot ---------------------------------------------------------
+git init -q
 git add -A
-git commit -q -m "new project $name from solid-vanilla-starter" 2>/dev/null || true
+git commit -q -m "new project $name from solid-vanilla-starter (framework $tag)" 2>/dev/null || true
 
 echo
 echo "done: $target"
 echo "next: cd $target && bun run dev      # http://localhost:5177"
-echo "latest framework: git submodule update --remote && bun install"
+echo "framework release: $tag   (pin exact: $0 $name build-<sha>)"
