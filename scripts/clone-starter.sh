@@ -37,48 +37,39 @@ fi
 
 repo="$(cd "$(dirname "$0")/.." && pwd)"
 
-# Package version carried in the release asset names (single source: the
-# packages' package.json version).
-version="$(python3 -c "import json;print(json.load(open('$repo/solid-vanilla-core/package.json'))['version'])")"
-base="https://github.com/$REPO_OWNER/$REPO_NAME/releases/download/$tag"
-
 # --- app files: the starter package only -------------------------------
 src="$repo/solid-vanilla-starter"
 mkdir -p "$target"
-for f in src vite.config.ts tsconfig.json package.json AGENTS.md readme.md; do
-  [ -e "$src/$f" ] && cp -r "$src/$f" "$target/"
-done
-rm -rf "$target/dist" "$target/node_modules"
-sed -i "s/solid-vanilla-starter/$name/g" "$target/package.json" "$target/AGENTS.md"
+rsync -av \
+  --exclude='node_modules/' \
+  --exclude='.git/' \
+  --exclude='dist' \
+  "$repo/solid-vanilla-starter/" "$target"
 
-# --- dependencies: GitHub release tarballs (git-viewer style) -----------
+# --- rename the app + point the framework deps at the release tarballs ---
+# Replace every solid-vanilla-starter self-reference with the project name,
+# and swap the workspace:* deps for GitHub release tarballs (overrides keep
+# the ui/server tarballs' own "solid-vanilla": "0.1.0" on the same release,
+# like git-viewer's package.json).
+version="$(python3 -c "import json;print(json.load(open('$repo/solid-vanilla-core/package.json'))['version'])")"
+base="https://github.com/$REPO_OWNER/$REPO_NAME/releases/download/$tag"
+
+grep -rl "solid-vanilla-starter" "$target" --include='*.md' --include='*.json' \
+  | xargs -r sed -i "s/solid-vanilla-starter/$name/g"
+
 python3 - "$target/package.json" "$version" "$base" <<'EOF'
 import json, sys
 path, version, base = sys.argv[1], sys.argv[2], sys.argv[3]
-urls = {name: f"{base}/{name}-{version}.tgz" for name in
+urls = {n: f"{base}/{n}-{version}.tgz" for n in
         ("solid-vanilla", "solid-vanilla-ui", "solid-vanilla-server")}
 pkg = json.load(open(path))
-pkg["dependencies"].update(urls)
-# overrides keep transitive resolution (ui/server's pinned
-# "solid-vanilla": "0.1.0") on the release tarball instead of the npm
-# registry, mirroring git-viewer's package.json.
+for k, v in urls.items():
+    pkg["dependencies"][k] = v
 pkg["overrides"] = urls
 with open(path, "w") as f:
     json.dump(pkg, f, indent=2)
     f.write("\n")
 EOF
 
-# --- install + first build ----------------------------------------------
-cd "$target"
-bun install
-bun run build
-
-# --- git snapshot ---------------------------------------------------------
-git init -q
-git add -A
-git commit -q -m "new project $name from solid-vanilla-starter (framework $tag)" 2>/dev/null || true
-
 echo
 echo "done: $target"
-echo "next: cd $target && bun run dev      # http://localhost:5177"
-echo "framework release: $tag   (pin exact: $0 $name build-<sha>)"
