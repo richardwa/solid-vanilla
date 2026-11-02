@@ -71,5 +71,11 @@ with open(path, "w") as f:
     f.write("\n")
 EOF
 
+# --- ignore build output and installed packages -------------------------
+cat > "$target/.gitignore" <<'EOF'
+node_modules
+dist
+EOF
+
 echo
 echo "done: $target"
