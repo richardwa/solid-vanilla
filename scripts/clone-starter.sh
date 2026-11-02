@@ -63,7 +63,6 @@ sed -i -e 's/^  }$/  },/' -e '$i\
 
 # --- install -------------------------------------------------------------
 cd "$target"
-bun install
 bun add \
   "https://github.com/richardwa/solid-vanilla/releases/download/latest/solid-vanilla-0.1.0.tgz" \
   "https://github.com/richardwa/solid-vanilla/releases/download/latest/solid-vanilla-ui-0.1.0.tgz" \
