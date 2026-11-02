@@ -1,7 +1,8 @@
 import { h, hbox, signal, vbox } from "solid-vanilla";
 import { Button, ClickLink, Panel } from "./components";
 import { PasswordInput, TextInput } from "./inputs";
-import { apiPath } from "./auth";
+// The API base path shared by login/me/logout calls.
+const apiPath = "/api";
 
 // Session-auth client helpers: the server sets an HttpOnly session cookie
 // at POST {apiPath}/login (see solid-vanilla-server's auth: "session" mode)

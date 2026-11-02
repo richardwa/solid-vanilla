@@ -35,17 +35,6 @@ export const apiPath = "/api";
 
 const execFileP = promisify(execFile);
 
-/** Does a Linux account with this name exist? */
-export const userExists = async (login: string): Promise<boolean> => {
-  if (!/^[a-z_][a-z0-9_-]*\$?$/i.test(login)) return false;
-  try {
-    await execFileP("getent", ["passwd", login]);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
 /** Is the login a member (primary or supplementary) of the named group? */
 const inGroup = async (login: string, group: string): Promise<boolean> => {
   try {
@@ -72,7 +61,10 @@ const validatorCheck = (login: string, password: string): Promise<boolean> =>
         socketPath: VALIDATOR_SOCKET,
         path: "/validate",
         method: "POST",
-        headers: { "content-type": "application/json", "content-length": Buffer.byteLength(body) },
+        headers: {
+          "content-type": "application/json",
+          "content-length": Buffer.byteLength(body),
+        },
         timeout: 10_000,
       },
       (res) => {
