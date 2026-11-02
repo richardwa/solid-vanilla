@@ -15,7 +15,7 @@ const expressPlugin = () => ({
 export default defineConfig({
   root: "src/client",
   server: {
-    port: 5178,
+    port: 5177,
     host: "0.0.0.0",
     allowedHosts: true,
     strictPort: true,
