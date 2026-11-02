@@ -4,6 +4,7 @@ import {
   Page,
   Table,
   TableHeader,
+  Tabs,
   Td,
   Tr,
 } from "solid-vanilla-ui";
@@ -17,6 +18,48 @@ const logRow = (log: GitLog) =>
     Td(log.commitAuthor),
     Td(log.commitMessage),
   );
+
+// Tab content 1: the git log as a table.
+const logTable = (
+  maxLines: ReturnType<typeof signal<number>>,
+  selectedBranch: ReturnType<typeof signal<string | undefined>>,
+) =>
+  Table().inner(
+    TableHeader("Commit", "Date", "Author", "Message"),
+    h("tbody").watch([maxLines, selectedBranch], (node) => {
+      const branch = selectedBranch.get();
+      if (branch) {
+        fetchJson("gitLogs", branch, maxLines.get()).then((logs) => {
+          node.inner(
+            ...logs.map((log) =>
+              node.memo([branch, log.commitHash].join(" "), () => logRow(log)),
+            ),
+          );
+        });
+      }
+    }),
+  );
+
+// Tab content 2: the same git log as plain text lines.
+const logText = (
+  maxLines: ReturnType<typeof signal<number>>,
+  selectedBranch: ReturnType<typeof signal<string | undefined>>,
+) =>
+  h("pre").watch([maxLines, selectedBranch], (node) => {
+    const branch = selectedBranch.get();
+    if (branch) {
+      fetchJson("gitLogs", branch, maxLines.get()).then((logs) => {
+        node.inner(
+          logs
+            .map(
+              (log) =>
+                `${log.commitHash.slice(0, 10)} ${formatDate(log.commitDate)} ${log.commitAuthor}: ${log.commitMessage}`,
+            )
+            .join("\n"),
+        );
+      });
+    }
+  });
 
 export const GitDemo = () => {
   const maxLines = signal(5);
@@ -46,22 +89,9 @@ export const GitDemo = () => {
       );
     }),
     h("br"),
-    Table().inner(
-      TableHeader("Commit", "Date", "Author", "Message"),
-      h("tbody").watch([maxLines, selectedBranch], (node) => {
-        const branch = selectedBranch.get();
-        if (branch) {
-          fetchJson("gitLogs", branch, maxLines.get()).then((logs) => {
-            node.inner(
-              ...logs.map((log) =>
-                node.memo([branch, log.commitHash].join(" "), () =>
-                  logRow(log),
-                ),
-              ),
-            );
-          });
-        }
-      }),
-    ),
+    Tabs([
+      { label: "commits", content: () => logTable(maxLines, selectedBranch) },
+      { label: "raw log", content: () => logText(maxLines, selectedBranch) },
+    ]),
   );
 };

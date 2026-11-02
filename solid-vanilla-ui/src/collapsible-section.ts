@@ -1,6 +1,5 @@
-﻿import { BaseNode, h } from "./rnode";
-import { getValue, OptionalSignal, Signal } from "./signal";
-import { div } from "./base-components";
+﻿import { BaseNode, div, h } from "solid-vanilla";
+import { getValue, OptionalSignal, Signal } from "solid-vanilla";
 
 type Props = {
   open?: OptionalSignal<boolean>;
