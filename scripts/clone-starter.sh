@@ -51,25 +51,38 @@ rsync -av \
 # and swap the workspace:* deps for GitHub release tarballs (overrides keep
 # the ui/server tarballs' own "solid-vanilla": "0.1.0" on the same release,
 # like git-viewer's package.json).
-version="$(python3 -c "import json;print(json.load(open('$repo/solid-vanilla-core/package.json'))['version'])")"
+version="$(awk -F'"' '/"version"/{print $4; exit}' "$repo/solid-vanilla-core/package.json")"
 base="https://github.com/$REPO_OWNER/$REPO_NAME/releases/download/$tag"
 
 grep -rl "solid-vanilla-starter" "$target" --include='*.md' --include='*.json' \
   | xargs -r sed -i "s/solid-vanilla-starter/$name/g"
 
-python3 - "$target/package.json" "$version" "$base" <<'EOF'
-import json, sys
-path, version, base = sys.argv[1], sys.argv[2], sys.argv[3]
-urls = {n: f"{base}/{n}-{version}.tgz" for n in
-        ("solid-vanilla", "solid-vanilla-ui", "solid-vanilla-server")}
-pkg = json.load(open(path))
-for k, v in urls.items():
-    pkg["dependencies"][k] = v
-pkg["overrides"] = urls
-with open(path, "w") as f:
-    json.dump(pkg, f, indent=2)
-    f.write("\n")
-EOF
+# Swap the workspace:* deps for release tarballs and append an overrides
+# block (keeps the ui/server tarballs' own "solid-vanilla": "0.1.0" on the
+# same release, like git-viewer's package.json).
+core="$base/solid-vanilla-$version.tgz"
+ui="$base/solid-vanilla-ui-$version.tgz"
+server="$base/solid-vanilla-server-$version.tgz"
+awk -v core="$core" -v ui="$ui" -v server="$server" '
+  {
+    gsub(/"solid-vanilla": "workspace:\*"/, "\"solid-vanilla\": \"" core "\"")
+    gsub(/"solid-vanilla-ui": "workspace:\*"/, "\"solid-vanilla-ui\": \"" ui "\"")
+    gsub(/"solid-vanilla-server": "workspace:\*"/, "\"solid-vanilla-server\": \"" server "\"")
+  }
+  /"dependencies"/ { ind = 1 }
+  ind && /^  \}$/ && !done {
+    sub(/^  \}$/, "  },")
+    print
+    print "  \"overrides\": {"
+    print "    \"solid-vanilla\": \"" core "\","
+    print "    \"solid-vanilla-ui\": \"" ui "\","
+    print "    \"solid-vanilla-server\": \"" server "\""
+    print "  }"
+    done = 1
+    next
+  }
+  { print }
+' "$target/package.json" > "$target/package.json.tmp" && mv "$target/package.json.tmp" "$target/package.json"
 
 # --- ignore build output and installed packages -------------------------
 cat > "$target/.gitignore" <<'EOF'
