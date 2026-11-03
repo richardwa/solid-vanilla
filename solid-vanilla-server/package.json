@@ -30,5 +30,10 @@
     "prettier": "^3.9.6",
     "tsup": "^9.0.0",
     "typescript": "7"
+  },
+  "peerDependenciesMeta": {
+    "solid-vanilla": {
+      "optional": true
+    }
   }
 }
