@@ -2,5 +2,6 @@
 # never reach the image (a leaked node_modules would mask a broken install)
 node_modules
 dist
+dist-server
 artifacts
 .git

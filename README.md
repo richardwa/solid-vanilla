@@ -15,7 +15,7 @@ A [Bun workspace](https://bun.sh/docs/install/workspaces) monorepo containing **
 
 ```bash
 bun install          # installs everything at the root (single bun.lock)
-bun run build        # prettier + tsc (+ vite build for the starter) in every package
+bun run build        # prettier + tsc (+ vite/tsup bundle for the starter) in every package
 bun run test         # runs bun test where tests exist (core)
 bun run format       # prettier in every package
 ```
