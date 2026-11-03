@@ -13,8 +13,12 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   // shims __dirname/__filename for ESM (works on Bun and Node), used to
-  // locate the Vite client in ./public next to the bundle.
+  // locate the Vite client next to the bundle.
   shims: true,
+  // Injected as a literal: the bundle finds the client at ./public.
+  define: {
+    __CLIENT_DIR__: JSON.stringify("public"),
+  },
   // Express and its deps are CJS and call require() dynamically; restore a
   // real require for the ESM bundle so it also runs on plain Node.
   banner: {

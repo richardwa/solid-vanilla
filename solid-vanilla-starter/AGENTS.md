@@ -64,12 +64,12 @@ The whole deployable artifact is therefore just the `dist-server/` folder
 (`server.js` + `public/`). `bun run start` builds first, then runs the bundle
 (`bun run serve` skips the rebuild).
 
-The same `server.ts` entry works from source and from the bundle: it finds the
-client by trying `$CLIENT_DIR`, `./public` (bundle: `dist-server/server.js`) and
-`../../dist-server/public` (source: `src/server/server.ts`), and fails with a
-clear error if none contains an `index.html`. The bundle runs on both Bun and
-plain Node (ESM shims plus a `createRequire` banner for Express's dynamic
-`require()` calls).
+The client path is resolved at build time, not by probing at runtime: the source
+uses a declared `__CLIENT_DIR__` constant that tsup replaces with `"public"` for
+the bundle, and `bun run start:src` passes `"../../dist-server/public"` via
+`bun --define` when running `src/server/server.ts` directly. The bundle runs on
+both Bun and plain Node (ESM shims plus a `createRequire` banner for Express's
+dynamic `require()` calls).
 
 ## How solid-vanilla works
 

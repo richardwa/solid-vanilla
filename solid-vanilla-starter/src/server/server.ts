@@ -1,31 +1,20 @@
 import express, { Request, Response } from "express";
-import fs from "node:fs";
 import path from "path";
 import { configureRoutes } from "./routes";
+
+// Resolved at build time: tsup's `define` sets this to "public" for the
+// bundle, while `bun run start:src` passes a source-relative path via
+// `bun --define`. No runtime filesystem probing.
+declare const __CLIENT_DIR__: string;
 
 const app = express();
 const port = process.env.PORT || 5177;
 
 configureRoutes(app);
 
-// Locate the built client for both ways this entry is run:
-//   bundle: dist-server/server.js        -> ./public
-//   source: src/server/server.ts         -> ../../dist-server/public
-// CLIENT_DIR overrides both (useful for deploys with a different layout).
-const clientDir = [
-  process.env.CLIENT_DIR && path.resolve(process.env.CLIENT_DIR),
-  path.resolve(__dirname, "public"),
-  path.resolve(__dirname, "../../dist-server/public"),
-]
-  .filter((dir): dir is string => Boolean(dir))
-  .find((dir) => fs.existsSync(path.join(dir, "index.html")));
-
-if (!clientDir) {
-  throw new Error(
-    "client build not found; run `bun run build` (or set CLIENT_DIR)",
-  );
-}
-
+//   bundle: dist-server/server.js -> ./public
+//   source: src/server/server.ts  -> ../../dist-server/public
+const clientDir = path.resolve(__dirname, __CLIENT_DIR__);
 app.use(express.static(clientDir));
 
 // default to index.html for Router
