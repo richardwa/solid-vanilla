@@ -27,7 +27,8 @@ A starter template for **solid-vanilla**, a tiny (~200 lines) SolidJS-like react
 bun install        # install dependencies
 bun run dev        # vite dev server on http://localhost:5177 (express API mounted via plugin)
 bun run build      # prettier format + tsc typecheck + vite build → ./dist, then tsup → ./dist-server
-bun run start      # run the bundled server (dist-server/server.js) serving dist + API (port 5177)
+bun run start      # build, then run dist-server/server.js (serves dist + API, port 5177)
+bun run serve      # run the existing dist-server/server.js bundle without rebuilding
 bun run format     # prettier over *.json, *.ts, ./src
 ```
 
@@ -56,8 +57,9 @@ tsup.config.ts         # bundles src/server/server.ts → dist-server/server.js 
 ```
 
 `bun run build` emits two independent outputs: the Vite client in `./dist` and the
-tsup server bundle in `./dist-server`. `bun run start` runs the bundle directly;
-`dist-server` is separate so Vite's `emptyOutDir` never wipes it and Express does
+tsup server bundle in `./dist-server`. `bun run start` builds first, then runs the
+bundle directly (`bun run serve` skips the rebuild); `dist-server` is separate so
+Vite's `emptyOutDir` never wipes it and Express does
 not serve the server bundle as a static asset.
 
 ## How solid-vanilla works

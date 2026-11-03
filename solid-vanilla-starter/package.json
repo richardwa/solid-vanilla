@@ -1,14 +1,22 @@
 {
   "name": "solid-vanilla-starter",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "format": "bun x prettier -w *.json *.ts ./src",
     "prebuild": "bun run format",
     "build": "tsc && vite build && tsup",
-    "start": "bun dist-server/server.js"
+    "prestart": "bun run build",
+    "start": "bun dist-server/server.js",
+    "serve": "bun dist-server/server.js"
+  },
+  "dependencies": {
+    "@picocss/pico": "^2.1.1",
+    "solid-vanilla": "workspace:*",
+    "solid-vanilla-server": "workspace:*",
+    "solid-vanilla-ui": "workspace:*"
   },
   "devDependencies": {
     "@types/express": "types/express",
@@ -17,11 +25,5 @@
     "tsup": "^9.0.0",
     "typescript": "7",
     "vite": "^7.3.6"
-  },
-  "dependencies": {
-    "@picocss/pico": "^2.1.1",
-    "solid-vanilla": "workspace:*",
-    "solid-vanilla-server": "workspace:*",
-    "solid-vanilla-ui": "workspace:*"
   }
 }

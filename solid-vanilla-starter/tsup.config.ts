@@ -12,7 +12,8 @@ export default defineConfig({
   platform: "node",
   sourcemap: true,
   clean: true,
-  // shims __dirname/__filename for ESM, used to locate the client dist/.
+  // shims __dirname/__filename for ESM (works on Bun and Node), used to
+  // locate the Vite client dist/.
   shims: true,
   external: ["express"],
   noExternal: ["solid-vanilla-server"],
