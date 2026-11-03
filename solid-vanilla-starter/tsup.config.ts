@@ -1,9 +1,9 @@
 import { defineConfig } from "tsup";
 
 // Bundle the Express server and every runtime dependency into one standalone
-// ESM file (no node_modules needed). Built first, then Vite writes the client
-// into ./dist-server/public, so the whole deployable artifact is the
-// self-contained ./dist-server folder.
+// ESM file (no node_modules needed). The client is the one external input: it
+// is built separately by Vite into ./dist and served from disk at runtime, so
+// an artifact is just dist-server/server.js + dist/.
 export default defineConfig({
   entry: { server: "src/server/server.ts" },
   outDir: "dist-server",
@@ -13,12 +13,8 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   // shims __dirname/__filename for ESM (works on Bun and Node), used to
-  // locate the Vite client next to the bundle.
+  // locate the Vite client dist/ next to the bundle.
   shims: true,
-  // Injected as a literal: the bundle finds the client at ./public.
-  define: {
-    __CLIENT_DIR__: JSON.stringify("public"),
-  },
   // Express and its deps are CJS and call require() dynamically; restore a
   // real require for the ESM bundle so it also runs on plain Node.
   banner: {

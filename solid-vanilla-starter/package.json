@@ -7,10 +7,9 @@
     "dev": "vite",
     "format": "bun x prettier -w *.json *.ts ./src",
     "prebuild": "bun run format",
-    "build": "tsc && tsup && vite build",
+    "build": "tsc && vite build && tsup",
     "prestart": "bun run build",
     "start": "bun dist-server/server.js",
-    "start:src": "bun --define '__CLIENT_DIR__=\"../../dist-server/public\"' src/server/server.ts",
     "serve": "bun dist-server/server.js"
   },
   "dependencies": {

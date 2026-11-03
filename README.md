@@ -24,7 +24,7 @@ Run an individual package's scripts with `bun run --cwd <pkg> <script>`, e.g.:
 
 ```bash
 bun run --cwd solid-vanilla-starter dev    # vite dev server on http://localhost:5177
-bun run --cwd solid-vanilla-starter start  # build + serve public/ & API on port 5177
+bun run --cwd solid-vanilla-starter start  # build + serve dist & API on port 5177
 bun run start                              # same, from the repo root
 bun run --cwd solid-vanilla-core test      # framework unit tests
 ```

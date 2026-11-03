@@ -21,9 +21,7 @@ export default defineConfig({
     strictPort: true,
   },
   build: {
-    // server bundle is built first into dist-server/server.js; the client
-    // lands beside it as the static public/ folder of the deployable artifact.
-    outDir: path.resolve(__dirname, "dist-server/public"),
+    outDir: path.resolve(__dirname, "dist"),
     emptyOutDir: true,
   },
   plugins: [expressPlugin()],
