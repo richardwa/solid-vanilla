@@ -30,5 +30,10 @@
   },
   "peerDependencies": {
     "solid-vanilla": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "solid-vanilla": {
+      "optional": true
+    }
   }
 }
