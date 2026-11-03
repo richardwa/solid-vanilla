@@ -28,6 +28,7 @@ bun install        # install dependencies
 bun run dev        # vite dev server on http://localhost:5177 (express API mounted via plugin)
 bun run build      # prettier + tsc typecheck + tsup (server) → ./dist-server, then vite → ./dist-server/public
 bun run start      # build, then run dist-server/server.js (serves public/ + API, port 5177)
+bun run start:src  # run src/server/server.ts directly (requires a previous build)
 bun run serve      # run the existing dist-server/server.js bundle without rebuilding
 bun run format     # prettier over *.json, *.ts, ./src
 ```
@@ -61,9 +62,14 @@ tsup.config.ts         # bundles src/server/server.ts + all deps → dist-server
 `node_modules` needed), then Vite writes the client into `./dist-server/public`.
 The whole deployable artifact is therefore just the `dist-server/` folder
 (`server.js` + `public/`). `bun run start` builds first, then runs the bundle
-(`bun run serve` skips the rebuild). The bundle locates the client at `./public`
-next to itself and runs on both Bun and plain Node (ESM shims plus a
-`createRequire` banner for Express's dynamic `require()` calls).
+(`bun run serve` skips the rebuild).
+
+The same `server.ts` entry works from source and from the bundle: it finds the
+client by trying `$CLIENT_DIR`, `./public` (bundle: `dist-server/server.js`) and
+`../../dist-server/public` (source: `src/server/server.ts`), and fails with a
+clear error if none contains an `index.html`. The bundle runs on both Bun and
+plain Node (ESM shims plus a `createRequire` banner for Express's dynamic
+`require()` calls).
 
 ## How solid-vanilla works
 
