@@ -1,0 +1,15 @@
+FROM docker.io/oven/bun:1.3.13-alpine
+
+WORKDIR /src
+
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile || true
+
+COPY . .
+
+CMD set -e; \
+    : "${OUTPUT:?OUTPUT must be set to the artifact output dir}"; \
+    bun run build; \
+    bun run test; \
+    cp -r "./dist" "$OUTPUT"; \
+    cp -r "./dist-server" "$OUTPUT"

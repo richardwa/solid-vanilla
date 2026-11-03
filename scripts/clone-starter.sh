@@ -41,6 +41,7 @@ rsync -av \
   --exclude='node_modules/' \
   --exclude='.git/' \
   --exclude='dist' \
+  --exclude='dist-server' \
   "$repo/solid-vanilla-starter/" "$target"
 
 grep -rl "solid-vanilla-starter" "$target" --include='*.md' --include='*.json' |
