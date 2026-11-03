@@ -42,10 +42,14 @@ bun run test
 fixui() {
   tar=$1
   tmp=$(mktemp -d)
-  tar xzf "$tar" -C "$tmp" package/package.json
+  tar xzf "$tar" -C "$tmp"
   # drop the baked-in regular dependency (from the resolved workspace
   # devDependency); idempotent in case the peer block is already there
-  sed -i -e 's/"solid-vanilla": "0\.1\.0",\{0,1\}//' -e '/^[[:space:]]*$/d' "$tmp/package/package.json"
+  # remove the resolved devDep pin wherever it sits, keeping the JSON
+  # valid (no dangling commas): first/middle/last position of the entry
+  sed -i '/"solid-vanilla": "0\.1\.0"/d' "$tmp/package/package.json"
+  # a deleted entry can leave a dangling comma before a closing brace
+  sed -i ':a;N;$!ba;s/,\n  }/\n  }/g' "$tmp/package/package.json"
   sed -i 's/"@picocss\/pico": "\^2.1.1",/"@picocss\/pico": "^2.1.1"/' "$tmp/package/package.json"
   if ! grep -q '"peerDependencies"' "$tmp/package/package.json"; then
     sed -i 's/^  }$/  },\n  "peerDependencies": {\n    "solid-vanilla": "*"\n  },\n  "peerDependenciesMeta": {\n    "solid-vanilla": {\n      "optional": true\n    }\n  }/' "$tmp/package/package.json"
