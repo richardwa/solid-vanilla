@@ -23,8 +23,7 @@
   "devDependencies": {
     "prettier": "^3.9.6",
     "tsup": "^9.0.0",
-    "typescript": "7",
-    "solid-vanilla": "workspace:*"
+    "typescript": "7"
   },
   "dependencies": {
     "@picocss/pico": "^2.1.1"
