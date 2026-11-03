@@ -23,18 +23,10 @@
   "devDependencies": {
     "prettier": "^3.9.6",
     "tsup": "^9.0.0",
-    "typescript": "7",
-    "solid-vanilla": "workspace:*"
+    "typescript": "7"
   },
   "dependencies": {
-    "@picocss/pico": "^2.1.1"
-  },
-  "peerDependencies": {
-    "solid-vanilla": "*"
-  },
-  "peerDependenciesMeta": {
-    "solid-vanilla": {
-      "optional": true
-    }
+    "@picocss/pico": "^2.1.1",
+    "solid-vanilla": "workspace:*"
   }
 }
