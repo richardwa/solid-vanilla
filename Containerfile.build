@@ -15,7 +15,7 @@
 # `bun run test` (bun test, core). The script then packs each package's dist/
 # into its tarball, exactly what `bun publish` would ship.
 # The steps themselves live in scripts/build-container.sh.
-FROM docker.io/oven/bun:1.3.13-alpine
+FROM docker.io/oven/bun:1-alpine
 
 WORKDIR /src
 
