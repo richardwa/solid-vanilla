@@ -49,7 +49,7 @@ podman run --rm -e OUTPUT=/output -v "$PWD/artifacts:/output" \
 
 Artifact shape under `$OUTPUT`: `core/` (framework), `ui/` (components,
 depends on `core/`), `server/` (Express helper), plus `core.zip`, `ui.zip`,
-`server.zip`. Steps live in `scripts/build-container.sh`.
+`server.zip`. Build steps are inline in `Containerfile.build` (run stage).
 bun run --cwd solid-vanilla-starter dev    # vite dev server, port 5177
 bun run --cwd solid-vanilla-starter start  # serve dist + API, port 5177
 ```

@@ -12,9 +12,8 @@
 #
 # The build stage is setup (deps + sources); the run stage is the gate:
 # `bun run build` (tsup bundle + tsc typecheck for every package) and
-# `bun run test` (bun test, core). The script then packs each package's dist/
-# into its tarball, exactly what `bun publish` would ship.
-# The steps themselves live in scripts/build-container.sh.
+# `bun run test` (bun test, core). It then packs each package's dist/ into its
+# tarball, exactly what `bun publish` would ship.
 FROM docker.io/oven/bun:1.3.13-alpine
 
 WORKDIR /src
@@ -22,7 +21,7 @@ WORKDIR /src
 # pre-install to warm bun's cache so this layer caches across source changes.
 # Note this CANNOT be the real install: with the package dirs still empty,
 # bun's per-package node_modules (where the .bin links live) are not created.
-# The build script therefore re-runs bun install with the full tree (fast,
+# The run stage therefore re-runs bun install with the full tree (fast,
 # everything comes from the cache).
 COPY package.json bun.lock ./
 COPY solid-vanilla-core/package.json solid-vanilla-core/
@@ -32,4 +31,21 @@ COPY solid-vanilla-starter/package.json solid-vanilla-starter/
 RUN bun install --frozen-lockfile || true
 
 COPY . .
-CMD ["sh", "scripts/build-container.sh"]
+
+# Run stage:
+# 1. real install with the full tree, so bun creates the per-package
+#    node_modules (with the .bin links tsc/prettier need). The deps layer's
+#    premature install left empty node_modules dirs that make bun skip
+#    linking, so remove them first (the cache stays warm, so this is fast).
+# 2. gate: tsup bundle + tsc typecheck (bun run build) and bun test (core).
+# 3. pack each package from its own dir, so the tarball is the exact artifact
+#    `bun publish` would ship (bun pm pack also resolves workspace:* deps).
+CMD set -e; \
+    : "${OUTPUT:?OUTPUT must be set to the artifact output dir}"; \
+    rm -rf node_modules solid-vanilla-*/node_modules; \
+    bun install --frozen-lockfile; \
+    bun run build; \
+    bun run test; \
+    (cd solid-vanilla-core   && bun pm pack --destination "$OUTPUT"); \
+    (cd solid-vanilla-ui     && bun pm pack --destination "$OUTPUT"); \
+    (cd solid-vanilla-server && bun pm pack --destination "$OUTPUT")
