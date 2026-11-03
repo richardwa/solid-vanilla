@@ -10,7 +10,7 @@
     "solid-vanilla-starter"
   ],
   "scripts": {
-    "build": "bun run --filter '*' build",
+    "build": "bun run --cwd solid-vanilla-core build && bun run --cwd solid-vanilla-server build && bun run --cwd solid-vanilla-ui build && bun run --cwd solid-vanilla-starter build",
     "test": "bun run --filter '*' test",
     "format": "bun run --filter '*' format"
   }
