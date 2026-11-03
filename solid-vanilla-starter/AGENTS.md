@@ -26,8 +26,8 @@ A starter template for **solid-vanilla**, a tiny (~200 lines) SolidJS-like react
 ```bash
 bun install        # install dependencies
 bun run dev        # vite dev server on http://localhost:5177 (express API mounted via plugin)
-bun run build      # prettier format + tsc typecheck + vite build → ./dist, then tsup → ./dist-server
-bun run start      # build, then run dist-server/server.js (serves dist + API, port 5177)
+bun run build      # prettier + tsc typecheck + tsup (server) → ./dist-server, then vite → ./dist-server/public
+bun run start      # build, then run dist-server/server.js (serves public/ + API, port 5177)
 bun run serve      # run the existing dist-server/server.js bundle without rebuilding
 bun run format     # prettier over *.json, *.ts, ./src
 ```
@@ -46,7 +46,7 @@ src/
       components.ts   # shared UI components
       gitdemo.ts      # example page (git log viewer)
   server/
-    server.ts          # express app: static dist + API, SPA fallback
+    server.ts          # express app: static public/ + API, SPA fallback
     routes.ts          # auto-generates POST /api/<fn> routes from ServerApi impl
     resources/git.ts   # server-side data functions
   common/
@@ -56,14 +56,13 @@ vite.config.ts         # root=src/client, express middleware plugin, port 5177
 tsup.config.ts         # bundles src/server/server.ts + all deps → dist-server/server.js
 ```
 
-`bun run build` emits two independent outputs: the Vite client in `./dist` and a
-**standalone** server bundle in `./dist-server/server.js` (Express and the
-workspace packages are inlined; no `node_modules` needed). `dist/` is the only
-external input and is resolved next to the bundle, so a deployable artifact is
-simply `dist-server/server.js` + `dist/`. `bun run start` builds first, then runs
-the bundle (`bun run serve` skips the rebuild); `dist-server` is separate so
-Vite's `emptyOutDir` never wipes it and Express does not serve the server bundle
-as a static asset. The bundle runs on Bun and plain Node (ESM shims + a
+`bun run build` builds the **standalone** server bundle first
+(`./dist-server/server.js`; Express and the workspace packages are inlined, no
+`node_modules` needed), then Vite writes the client into `./dist-server/public`.
+The whole deployable artifact is therefore just the `dist-server/` folder
+(`server.js` + `public/`). `bun run start` builds first, then runs the bundle
+(`bun run serve` skips the rebuild). The bundle locates the client at `./public`
+next to itself and runs on both Bun and plain Node (ESM shims plus a
 `createRequire` banner for Express's dynamic `require()` calls).
 
 ## How solid-vanilla works

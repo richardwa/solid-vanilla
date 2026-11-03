@@ -6,10 +6,11 @@
 - vite-express-plugin for seamless dev environment
 
 ### Build artifacts
-`bun run build` produces the Vite client in `dist/` and a standalone server
-bundle in `dist-server/server.js` (all dependencies inlined, no `node_modules`
-required). The server reads the client from `dist/` next to it, so deploy those
-two paths together and start with `bun dist-server/server.js` (or plain `node`).
+`bun run build` builds the standalone server bundle first
+(`dist-server/server.js`, all dependencies inlined, no `node_modules` required),
+then Vite writes the client into `dist-server/public/`. The whole deployable
+artifact is the `dist-server/` folder: deploy it as-is and start with
+`bun dist-server/server.js` (or plain `node`).
 
 ### Client-Server bindings
 just add to interface, and implement server side.  client shares types using fetchJson

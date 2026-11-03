@@ -51,5 +51,5 @@ Artifact shape under `$OUTPUT`: `core/` (framework), `ui/` (components,
 depends on `core/`), `server/` (Express helper), plus `core.zip`, `ui.zip`,
 `server.zip`. Steps live in `scripts/build-container.sh`.
 bun run --cwd solid-vanilla-starter dev    # vite dev server, port 5177
-bun run --cwd solid-vanilla-starter start  # serve dist + API, port 5177
+bun run --cwd solid-vanilla-starter start  # serve dist-server/public + API, port 5177
 ```

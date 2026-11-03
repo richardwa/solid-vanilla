@@ -7,8 +7,9 @@ const port = process.env.PORT || 5177;
 
 configureRoutes(app);
 
-// Serve frontend from built Vite dist (dist-server/server.js -> ../dist)
-const distPath = path.resolve(__dirname, "../dist");
+// Serve frontend from the Vite build next to the bundle
+// (dist-server/server.js + dist-server/public)
+const distPath = path.resolve(__dirname, "public");
 app.use(express.static(distPath));
 
 // default to index.html for Router
