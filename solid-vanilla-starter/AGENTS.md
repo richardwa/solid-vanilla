@@ -53,14 +53,18 @@ src/
     interface.ts       # ServerApi type + fetchJson client helper (shared by both sides)
     util.ts            # shared utilities
 vite.config.ts         # root=src/client, express middleware plugin, port 5177
-tsup.config.ts         # bundles src/server/server.ts → dist-server/server.js (express external)
+tsup.config.ts         # bundles src/server/server.ts + all deps → dist-server/server.js
 ```
 
-`bun run build` emits two independent outputs: the Vite client in `./dist` and the
-tsup server bundle in `./dist-server`. `bun run start` builds first, then runs the
-bundle directly (`bun run serve` skips the rebuild); `dist-server` is separate so
-Vite's `emptyOutDir` never wipes it and Express does
-not serve the server bundle as a static asset.
+`bun run build` emits two independent outputs: the Vite client in `./dist` and a
+**standalone** server bundle in `./dist-server/server.js` (Express and the
+workspace packages are inlined; no `node_modules` needed). `dist/` is the only
+external input and is resolved next to the bundle, so a deployable artifact is
+simply `dist-server/server.js` + `dist/`. `bun run start` builds first, then runs
+the bundle (`bun run serve` skips the rebuild); `dist-server` is separate so
+Vite's `emptyOutDir` never wipes it and Express does not serve the server bundle
+as a static asset. The bundle runs on Bun and plain Node (ESM shims + a
+`createRequire` banner for Express's dynamic `require()` calls).
 
 ## How solid-vanilla works
 
